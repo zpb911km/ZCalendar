@@ -1,0 +1,134 @@
+/* 深色主题变量 */
+:root {
+  /* 主色调 (调整为适合深色背景的版本) */
+  --primary-color: #0d6efd;
+  --primary-dark: #0b5ed7;
+  --primary-light: #6ea8fe;
+  
+  /* 背景色 */
+  --background-color: #121212;
+  --modal-background-color: #1e1e1e;
+  
+  /* 文字颜色 */
+  --text-color: #e0e0e0;
+  --text-secondary-color: #a0a0a0;
+  --text-light-color: #f0f0f0;
+  
+  /* 边框颜色 */
+  --border-color: #444444;
+  
+  /* 状态颜色 (调整为适合深色主题的版本) */
+  --success-color: #51cf66;
+  --warning-color: #fcc419;
+  --danger-color: #ff6b6b;
+  --info-color: #3bc9db;
+  
+  /* 背景色变体 */
+  --secondary-color: #6c757d;
+  --secondary-light: #343a40;
+  --input-background-color: #2d2d2d;
+  --card-background-color: #1e1e1e;
+  
+  /* 日历特定颜色 (调整为适合深色主题) */
+  --today-highlight: #1a237e;
+  --weekend-color: #2d2d2d;
+  --event-color: #1e3a5f;
+  --event-text-color: #7ebfff;
+}
+
+// 深色主题特定的按钮样式
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: var(--background-color);
+}
+
+.btn-success:hover {
+  background-color: #37b24d;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #ff5454;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--secondary-light);
+}
+
+// 深色主题特定的卡片样式
+.card {
+  background-color: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+// 深色主题特定的输入框样式
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-color);
+  background-color: var(--input-background-color);
+  background-clip: padding-box;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  color: var(--text-color);
+  background-color: var(--input-background-color);
+  border-color: var(--primary-light);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+// 深色主题特定的其他样式
+.text-muted {
+  color: var(--text-secondary-color) !important;
+}
+
+// 深色主题特定的表单样式
+input, textarea, select {
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}

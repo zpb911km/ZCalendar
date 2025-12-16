@@ -6,7 +6,7 @@ use crate::storage::database::Database;
 use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 // 导入模型
 pub mod models {
@@ -32,6 +32,7 @@ pub mod storage {
 pub mod commands {
     use super::*;
     use crate::models::event::{CreateEventDto, Event, UpdateEventDto};
+    use crate::models::calendar::Calendar;
     
     #[tauri::command]
     pub async fn get_all_events(
@@ -120,6 +121,47 @@ pub mod commands {
     ) -> Result<Vec<Event>, String> {
         state.lock().await.get_upcoming_events(limit).await.map_err(|e| e.to_string())
     }
+    
+    // 日历管理命令
+    #[tauri::command]
+    pub async fn get_all_calendars(
+        state: tauri::State<'_, Arc<Mutex<CalendarService>>>,
+    ) -> Result<Vec<Calendar>, String> {
+        state.lock().await.get_all_calendars().await.map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub async fn get_calendar_by_id(
+        state: tauri::State<'_, Arc<Mutex<CalendarService>>>,
+        id: String,
+    ) -> Result<Option<Calendar>, String> {
+        state.lock().await.get_calendar_by_id(&id).await.map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub async fn create_calendar(
+        state: tauri::State<'_, Arc<Mutex<CalendarService>>>,
+        name: String,
+        color: String,
+    ) -> Result<Calendar, String> {
+        state.lock().await.create_calendar(name, color).await.map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub async fn update_calendar(
+        state: tauri::State<'_, Arc<Mutex<CalendarService>>>,
+        calendar: Calendar,
+    ) -> Result<Calendar, String> {
+        state.lock().await.update_calendar(calendar).await.map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
+    pub async fn delete_calendar(
+        state: tauri::State<'_, Arc<Mutex<CalendarService>>>,
+        id: String,
+    ) -> Result<(), String> {
+        state.lock().await.delete_calendar(&id).await.map_err(|e| e.to_string())
+    }
 }
 
 // 应用初始化
@@ -169,6 +211,11 @@ pub fn run() {
             commands::get_events_in_range,
             commands::search_events,
             commands::get_upcoming_events,
+            commands::get_all_calendars,
+            commands::get_calendar_by_id,
+            commands::create_calendar,
+            commands::update_calendar,
+            commands::delete_calendar,
         ])
         .setup(|app| {
             init_app(app).map_err(|e| e.to_string().into())
