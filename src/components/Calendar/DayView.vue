@@ -154,13 +154,13 @@ const getEventStyle = (event: CalendarEvent): Record<string, string> => {
 const getEventColor = (event: CalendarEvent): string => {
   // 根据事件类型返回不同的颜色
   if (event.categories?.includes('工作')) {
-    return 'var(--calendar-work-event-color, #3b82f6)'; // 蓝色
+    return 'var(--primary-color)'; // 蓝色
   } else if (event.categories?.includes('个人')) {
-    return 'var(--calendar-personal-event-color, #10b981)'; // 绿色
+    return 'var(--success-color)'; // 绿色
   } else if (event.categories?.includes('重要')) {
-    return 'var(--calendar-important-event-color, #ef4444)'; // 红色
+    return 'var(--danger-color)'; // 红色
   }
-  return 'var(--calendar-default-event-color, #6b7280)'; // 灰色
+  return 'var(--secondary-color)'; // 灰色
 };
 
 const formatTime = (date: Date): string => {
@@ -196,14 +196,14 @@ const onTimeSlotClick = (time: Date) => {
   flex-direction: column;
   height: 100%;
   overflow: auto;
-  background-color: var(--calendar-bg-color);
+  background-color: var(--background-color);
 }
 
 .day-header {
   flex-shrink: 0;
   padding: 16px;
-  border-bottom: 1px solid var(--calendar-border-color);
-  background-color: var(--calendar-day-header-bg-color);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-color);
 }
 
 .date-info {
@@ -213,19 +213,19 @@ const onTimeSlotClick = (time: Date) => {
 .day-of-week {
   font-size: 18px;
   font-weight: 500;
-  color: var(--calendar-day-of-week-color);
+  color: var(--text-color);
 }
 
 .date-number {
   font-size: 32px;
   font-weight: 600;
   margin: 8px 0;
-  color: var(--calendar-date-number-color);
+  color: var(--text-color);
 }
 
 .full-date {
   font-size: 14px;
-  color: var(--calendar-full-date-color);
+  color: var(--text-secondary-color);
 }
 
 .time-axis {
@@ -239,7 +239,7 @@ const onTimeSlotClick = (time: Date) => {
 .time-row {
   display: flex;
   min-height: 60px; /* 每小时60px */
-  border-bottom: 1px solid var(--calendar-border-color);
+  border-bottom: 1px solid var(--border-color);
   position: relative;
 }
 
@@ -251,9 +251,9 @@ const onTimeSlotClick = (time: Date) => {
   justify-content: flex-end;
   padding-right: 8px;
   font-size: 12px;
-  color: var(--calendar-time-label-color);
-  background-color: var(--calendar-time-label-bg-color);
-  border-right: 1px solid var(--calendar-border-color);
+  color: var(--text-secondary-color);
+  background-color: var(--input-background-color);
+  border-right: 1px solid var(--border-color);
   position: sticky;
   left: 0;
   z-index: 2;
@@ -266,15 +266,15 @@ const onTimeSlotClick = (time: Date) => {
 }
 
 .time-slot:hover {
-  background-color: var(--calendar-time-slot-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .time-slot.current-time {
-  background-color: var(--calendar-current-time-bg-color);
+  background-color: var(--today-highlight);
 }
 
 .event-item {
-  color: var(--calendar-event-text-color);
+  color: var(--event-text-color);
   box-sizing: border-box;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -326,7 +326,7 @@ const onTimeSlotClick = (time: Date) => {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: var(--calendar-current-time-indicator-color);
+  background-color: var(--primary-color);
   z-index: 0;
 }
 </style>

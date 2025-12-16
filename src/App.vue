@@ -57,12 +57,10 @@ onMounted(() => {
 .nav-link.router-link-exact-active {
   border-bottom-color: var(--primary-color);
   color: var(--primary-color);
-  background-color: var(--secondary-light);
+  /* background-color: var(--secondary-light); */
 }
 
-.nav-link:hover {
-  background-color: var(--secondary-light);
-}
+
 
 .main-content {
   flex: 1;

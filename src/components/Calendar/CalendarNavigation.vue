@@ -24,6 +24,8 @@
       </button>
     </div>
     
+  </div>
+  <div style="align-items: center; text-align: center;">
     <div class="current-date">
       {{ formattedCurrentDate }}
     </div>
@@ -105,8 +107,8 @@ const changeView = (view: 'month' | 'week' | 'day') => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: var(--calendar-nav-bg-color);
-  border-bottom: 1px solid var(--calendar-border-color);
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .nav-controls {
@@ -117,9 +119,9 @@ const changeView = (view: 'month' | 'week' | 'day') => {
 .nav-btn {
   width: 32px;
   height: 32px;
-  border: 1px solid var(--calendar-border-color);
-  background-color: var(--calendar-button-bg-color);
-  color: var(--calendar-button-text-color);
+  border: 1px solid var(--border-color);
+  background-color: var(--input-background-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -130,7 +132,7 @@ const changeView = (view: 'month' | 'week' | 'day') => {
 }
 
 .nav-btn:hover {
-  background-color: var(--calendar-button-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .nav-btn.today-btn {
@@ -145,27 +147,23 @@ const changeView = (view: 'month' | 'week' | 'day') => {
 
 .view-btn {
   padding: 6px 12px;
-  border: 1px solid var(--calendar-border-color);
-  background-color: var(--calendar-button-bg-color);
-  color: var(--calendar-button-text-color);
+  border: 1px solid var(--border-color);
+  background-color: var(--input-background-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
 }
 
-.view-btn:hover {
-  background-color: var(--calendar-button-hover-bg-color);
-}
-
 .view-btn.active {
-  background-color: var(--calendar-active-button-bg-color);
-  color: var(--calendar-active-button-text-color);
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 .current-date {
   font-size: 16px;
   font-weight: 500;
-  color: var(--calendar-text-color);
+  color: var(--text-color);
 }
 </style>

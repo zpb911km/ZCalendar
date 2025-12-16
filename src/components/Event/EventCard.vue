@@ -51,13 +51,13 @@ const emit = defineEmits<{
 const getEventColor = computed(() => {
   // 根据事件类型返回不同的颜色
   if (props.event.categories?.includes('工作')) {
-    return 'var(--calendar-work-event-color, #3b82f6)';
+    return 'var(--primary-color)';
   } else if (props.event.categories?.includes('个人')) {
-    return 'var(--calendar-personal-event-color, #10b981)';
+    return 'var(--success-color)';
   } else if (props.event.categories?.includes('重要')) {
-    return 'var(--calendar-important-event-color, #ef4444)';
+    return 'var(--danger-color)';
   }
-  return 'var(--calendar-default-event-color, #6b7280)';
+  return 'var(--secondary-color)';
 });
 
 const onEventClick = () => {
@@ -70,7 +70,7 @@ const onEventClick = () => {
   border-radius: 6px;
   padding: 6px 8px;
   margin: 2px 0;
-  color: var(--calendar-event-text-color);
+  color: var(--event-text-color);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -119,6 +119,6 @@ const onEventClick = () => {
 }
 
 .all-day {
-  border-left: 3px solid var(--calendar-allday-event-border-color, #8b5cf6);
+  border-left: 3px solid var(--primary-color);
 }
 </style>

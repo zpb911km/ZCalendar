@@ -182,13 +182,13 @@ const getMoreEventsCount = (date: Date): number => {
 const getEventColor = (event: CalendarEvent): string => {
   // 根据事件类型返回不同的颜色
   if (event.categories?.includes('工作')) {
-    return 'var(--calendar-work-event-color, #3b82f6)'; // 蓝色
+    return 'var(--primary-color)'; // 蓝色
   } else if (event.categories?.includes('个人')) {
-    return 'var(--calendar-personal-event-color, #10b981)'; // 绿色
+    return 'var(--success-color)'; // 绿色
   } else if (event.categories?.includes('重要')) {
-    return 'var(--calendar-important-event-color, #ef4444)'; // 红色
+    return 'var(--danger-color)'; // 红色
   }
-  return 'var(--calendar-default-event-color, #6b7280)'; // 灰色
+  return 'var(--secondary-color)'; // 灰色
 };
 
 const formatTime = (date: Date): string => {
@@ -221,8 +221,8 @@ const showMoreEvents = (date: Date) => {
 .weekdays-header {
   display: flex;
   height: 40px;
-  border-bottom: 1px solid var(--calendar-border-color);
-  background-color: var(--calendar-weekday-header-bg-color);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--input-background-color);
 }
 
 .weekday-cell {
@@ -231,7 +231,7 @@ const showMoreEvents = (date: Date) => {
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  color: var(--calendar-weekday-text-color);
+  color: var(--text-color);
   font-size: 14px;
 }
 
@@ -250,8 +250,8 @@ const showMoreEvents = (date: Date) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--calendar-border-color);
-  border-bottom: 1px solid var(--calendar-border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   padding: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -260,15 +260,15 @@ const showMoreEvents = (date: Date) => {
 }
 
 .day-cell:hover {
-  background-color: var(--calendar-day-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .day-cell.current-month {
-  background-color: var(--calendar-current-month-bg-color);
+  background-color: var(--input-background-color);
 }
 
 .day-cell.today {
-  background-color: var(--calendar-today-bg-color);
+  background-color: var(--today-highlight);
   position: relative;
 }
 
@@ -280,12 +280,12 @@ const showMoreEvents = (date: Date) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--calendar-today-indicator-color);
+  background-color: var(--primary-color);
 }
 
 .day-cell.other-month {
-  background-color: var(--calendar-other-month-bg-color);
-  color: var(--calendar-other-month-text-color);
+  background-color: var(--secondary-light);
+  color: var(--text-secondary-color);
 }
 
 .day-number {
@@ -302,8 +302,8 @@ const showMoreEvents = (date: Date) => {
 }
 
 .day-cell.today .day-number {
-  background-color: var(--calendar-today-number-bg-color);
-  color: var(--calendar-today-number-text-color);
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .day-events {
@@ -319,7 +319,7 @@ const showMoreEvents = (date: Date) => {
   flex-direction: column;
   padding: 2px 4px;
   border-radius: 3px;
-  color: var(--calendar-event-text-color);
+  color: var(--event-text-color);
   font-size: 12px;
   cursor: pointer;
   overflow: hidden;
@@ -339,15 +339,15 @@ const showMoreEvents = (date: Date) => {
 }
 
 .more-events {
-  color: var(--calendar-more-events-text-color);
+  color: var(--text-secondary-color);
   font-size: 12px;
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 3px;
-  background-color: var(--calendar-more-events-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .more-events:hover {
-  background-color: var(--calendar-more-events-hover-bg-color);
+  background-color: var(--secondary-color);
 }
 </style>

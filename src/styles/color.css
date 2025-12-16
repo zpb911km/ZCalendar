@@ -36,7 +36,7 @@
   --event-text-color: #0c5460;
 }
 
-// 按钮样式
+/* 按钮样式 */
 .btn {
   padding: 8px 16px;
   border: none;
@@ -95,7 +95,7 @@
   background-color: var(--secondary-light);
 }
 
-// 卡片样式
+/* 卡片样式 */
 .card {
   background-color: var(--card-background-color);
   border: 1px solid var(--border-color);
@@ -104,7 +104,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-// 输入框样式
+/* 输入框样式 */
 .form-control {
   display: block;
   width: 100%;
@@ -127,7 +127,7 @@
   box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
 }
 
-// 通用样式
+/* 通用样式 */
 .container {
   width: 100%;
   padding-right: 15px;
@@ -184,7 +184,7 @@
   color: var(--text-secondary-color) !important;
 }
 
-// 响应式设计
+/* 响应式设计 */
 @media (min-width: 576px) {
   .container {
     max-width: 540px;

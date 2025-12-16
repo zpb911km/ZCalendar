@@ -8,12 +8,13 @@
         @today="goToToday"
         @next="nextPeriod"
         @prev="prevPeriod"
+        @view-change="changeView"
       />
       
-      <div class="calendar-actions">
+      <!-- <div class="calendar-actions">
         <button @click="openEventEditor()" class="btn btn-primary">添加事件</button>
         <button @click="importCalendar" class="btn btn-secondary">导入日历</button>
-      </div>
+      </div> -->
     </div>
     
     <!-- 日历视图内容 -->
@@ -81,7 +82,8 @@ const {
   nextPeriod,
   prevPeriod,
   goToToday,
-  loadCalendars
+  loadCalendars,
+  changeView,
 } = useCalendar();
 
 // 使用状态管理
@@ -230,18 +232,18 @@ onMounted(async () => {
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  background-color: var(--calendar-bg-color);
-  color: var(--calendar-text-color);
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .calendar-header {
   flex-shrink: 0;
-  display: flex;
+  /* display: flex; */
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--calendar-border-color);
-  background-color: var(--calendar-nav-bg-color);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-color);
 }
 
 .calendar-actions {

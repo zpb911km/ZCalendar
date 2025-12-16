@@ -134,7 +134,7 @@ const onOverlayClick = () => {
 }
 
 .event-detail {
-  background-color: var(--calendar-modal-bg-color);
+  background-color: var(--modal-background-color);
   border-radius: 8px;
   width: 100%;
   max-width: 500px;
@@ -150,12 +150,12 @@ const onOverlayClick = () => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 20px;
-  border-bottom: 1px solid var(--calendar-border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .detail-header h3 {
   margin: 0;
-  color: var(--calendar-text-color);
+  color: var(--text-color);
   flex: 1;
   word-break: break-word;
 }
@@ -165,7 +165,7 @@ const onOverlayClick = () => {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: var(--calendar-text-color);
+  color: var(--text-color);
   padding: 4px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
@@ -174,7 +174,7 @@ const onOverlayClick = () => {
 }
 
 .close-btn:hover {
-  background-color: var(--calendar-button-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .detail-content {
@@ -197,12 +197,12 @@ const onOverlayClick = () => {
 
 .info-label {
   font-size: 12px;
-  color: var(--calendar-label-text-color);
+  color: var(--text-secondary-color);
   font-weight: 500;
 }
 
 .info-value {
-  color: var(--calendar-text-color);
+  color: var(--text-color);
   font-size: 14px;
   word-break: break-word;
 }
@@ -212,13 +212,13 @@ const onOverlayClick = () => {
   justify-content: flex-end;
   gap: 12px;
   padding: 20px;
-  border-top: 1px solid var(--calendar-border-color);
+  border-top: 1px solid var(--border-color);
 }
 
 .btn-edit,
 .btn-delete {
   padding: 8px 20px;
-  border: 1px solid var(--calendar-border-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
@@ -226,20 +226,20 @@ const onOverlayClick = () => {
 }
 
 .btn-edit {
-  background-color: var(--calendar-button-bg-color);
-  color: var(--calendar-button-text-color);
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 .btn-edit:hover {
-  background-color: var(--calendar-button-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .btn-delete {
-  background-color: var(--calendar-delete-button-bg-color);
-  color: var(--calendar-delete-button-text-color);
+  background-color: var(--danger-color);
+  color: white;
 }
 
 .btn-delete:hover {
-  background-color: var(--calendar-delete-button-hover-bg-color);
+  background-color: #c82333;
 }
 </style>

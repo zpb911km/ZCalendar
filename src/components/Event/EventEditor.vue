@@ -215,7 +215,7 @@ const onOverlayClick = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--background-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -224,7 +224,7 @@ const onOverlayClick = () => {
 }
 
 .event-editor {
-  background-color: var(--calendar-modal-bg-color);
+  background-color: var(--background-color);
   border-radius: 8px;
   width: 100%;
   max-width: 500px;
@@ -240,12 +240,12 @@ const onOverlayClick = () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--calendar-border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .editor-header h3 {
   margin: 0;
-  color: var(--calendar-text-color);
+  color: var(--text-color);
 }
 
 .close-btn {
@@ -253,14 +253,14 @@ const onOverlayClick = () => {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: var(--calendar-text-color);
+  color: var(--text-color);
   padding: 4px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
 }
 
 .close-btn:hover {
-  background-color: var(--calendar-button-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .editor-form {
@@ -286,7 +286,7 @@ const onOverlayClick = () => {
   display: block;
   margin-bottom: 4px;
   font-weight: 500;
-  color: var(--calendar-text-color);
+  color: var(--text-color);
   font-size: 14px;
 }
 
@@ -295,10 +295,10 @@ const onOverlayClick = () => {
 .form-group select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--calendar-border-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background-color: var(--calendar-input-bg-color);
-  color: var(--calendar-input-text-color);
+  background-color: var(--input-background-color);
+  color: var(--text-color);
   font-size: 14px;
   box-sizing: border-box;
 }
@@ -307,8 +307,8 @@ const onOverlayClick = () => {
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: var(--calendar-input-focus-border-color);
-  box-shadow: 0 0 0 2px var(--calendar-input-focus-shadow-color);
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
 .checkbox-group {
@@ -327,13 +327,13 @@ const onOverlayClick = () => {
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid var(--calendar-border-color);
+  border-top: 1px solid var(--border-color);
 }
 
 .btn-cancel,
 .btn-save {
   padding: 8px 20px;
-  border: 1px solid var(--calendar-border-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
@@ -341,20 +341,20 @@ const onOverlayClick = () => {
 }
 
 .btn-cancel {
-  background-color: var(--calendar-button-bg-color);
-  color: var(--calendar-button-text-color);
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 .btn-cancel:hover {
-  background-color: var(--calendar-button-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .btn-save {
-  background-color: var(--calendar-primary-button-bg-color);
-  color: var(--calendar-primary-button-text-color);
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .btn-save:hover {
-  background-color: var(--calendar-primary-button-hover-bg-color);
+  background-color: var(--primary-dark);
 }
 </style>

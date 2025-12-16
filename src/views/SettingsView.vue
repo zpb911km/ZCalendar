@@ -213,21 +213,21 @@ const applyTheme = (selectedTheme: string) => {
   
   if (selectedTheme === 'dark' || 
       (selectedTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    // 深色主题变量
-    root.style.setProperty('--background-color', '#1a1a1a');
-    root.style.setProperty('--text-color', '#ffffff');
-    root.style.setProperty('--text-secondary-color', '#cccccc');
+    // 深色主题变量 - 与 dark-color.css 中的变量值保持一致
+    root.style.setProperty('--background-color', '#121212');
+    root.style.setProperty('--text-color', '#e0e0e0');
+    root.style.setProperty('--text-secondary-color', '#a0a0a0');
     root.style.setProperty('--border-color', '#444444');
-    root.style.setProperty('--input-background-color', '#2a2a2a');
-    root.style.setProperty('--modal-background-color', '#2a2a2a');
-    root.style.setProperty('--secondary-color', '#444444');
+    root.style.setProperty('--input-background-color', '#2d2d2d');
+    root.style.setProperty('--modal-background-color', '#1e1e1e');
+    root.style.setProperty('--secondary-color', '#6c757d');
   } else {
-    // 浅色主题变量
+    // 浅色主题变量 - 与 color.css 中的变量值保持一致
     root.style.setProperty('--background-color', '#ffffff');
-    root.style.setProperty('--text-color', '#000000');
-    root.style.setProperty('--text-secondary-color', '#666666');
-    root.style.setProperty('--border-color', '#dddddd');
-    root.style.setProperty('--input-background-color', '#f5f5f5');
+    root.style.setProperty('--text-color', '#212529');
+    root.style.setProperty('--text-secondary-color', '#6c757d');
+    root.style.setProperty('--border-color', '#dee2e6');
+    root.style.setProperty('--input-background-color', '#f8f9fa');
     root.style.setProperty('--modal-background-color', '#ffffff');
     root.style.setProperty('--secondary-color', '#e0e0e0');
   }
@@ -475,14 +475,14 @@ const clearAllEvents = async () => {
 }
 
 .btn-edit {
-  background-color: #ffc107;
-  color: #212529;
+  background-color: var(--warning-color);
+  color: var(--text-color);
   padding: 4px 8px;
   font-size: 12px;
 }
 
 .btn-danger {
-  background-color: #dc3545;
+  background-color: var(--danger-color);
   color: white;
   padding: 4px 8px;
   font-size: 12px;

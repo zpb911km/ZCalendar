@@ -161,13 +161,13 @@ const getEventStyle = (event: CalendarEvent, _date: Date): Record<string, string
 const getEventColor = (event: CalendarEvent): string => {
   // 根据事件类型返回不同的颜色
   if (event.categories?.includes('工作')) {
-    return 'var(--calendar-work-event-color, #3b82f6)'; // 蓝色
+    return 'var(--primary-color)'; // 蓝色
   } else if (event.categories?.includes('个人')) {
-    return 'var(--calendar-personal-event-color, #10b981)'; // 绿色
+    return 'var(--success-color)'; // 绿色
   } else if (event.categories?.includes('重要')) {
-    return 'var(--calendar-important-event-color, #ef4444)'; // 红色
+    return 'var(--danger-color)'; // 红色
   }
-  return 'var(--calendar-default-event-color, #6b7280)'; // 灰色
+  return 'var(--secondary-color)'; // 灰色
 };
 
 const formatTime = (date: Date): string => {
@@ -201,8 +201,8 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   display: flex;
   flex-shrink: 0;
   height: 60px;
-  border-bottom: 1px solid var(--calendar-border-color);
-  background-color: var(--calendar-weekday-header-bg-color);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--input-background-color);
 }
 
 .time-slot-cell {
@@ -218,18 +218,18 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   justify-content: center;
   padding: 4px;
   text-align: center;
-  border-right: 1px solid var(--calendar-border-color);
+  border-right: 1px solid var(--border-color);
   font-size: 14px;
 }
 
 .date-header-cell.today {
-  background-color: var(--calendar-today-bg-color);
+  background-color: var(--today-highlight);
   font-weight: 600;
 }
 
 .day-of-week {
   font-size: 12px;
-  color: var(--calendar-weekday-text-color);
+  color: var(--text-color);
 }
 
 .date-number {
@@ -248,7 +248,7 @@ const onTimeSlotClick = (date: Date, time: Date) => {
 .time-row {
   display: flex;
   min-height: 60px; /* 每小时60px */
-  border-bottom: 1px solid var(--calendar-border-color);
+  border-bottom: 1px solid var(--border-color);
   position: relative;
 }
 
@@ -260,24 +260,24 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   justify-content: flex-end;
   padding-right: 8px;
   font-size: 12px;
-  color: var(--calendar-time-label-color);
-  background-color: var(--calendar-time-label-bg-color);
-  border-right: 1px solid var(--calendar-border-color);
+  color: var(--text-secondary-color);
+  background-color: var(--input-background-color);
+  border-right: 1px solid var(--border-color);
 }
 
 .time-slot {
   flex: 1;
   position: relative;
-  border-right: 1px solid var(--calendar-border-color);
+  border-right: 1px solid var(--border-color);
   cursor: pointer;
 }
 
 .time-slot:hover {
-  background-color: var(--calendar-time-slot-hover-bg-color);
+  background-color: var(--secondary-light);
 }
 
 .event-item {
-  color: var(--calendar-event-text-color);
+  color: var(--event-text-color);
   box-sizing: border-box;
   cursor: pointer;
   transition: transform 0.2s ease;
