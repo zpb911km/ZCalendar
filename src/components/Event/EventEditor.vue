@@ -29,6 +29,22 @@
             rows="3"
           ></textarea>
         </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status">状态</label>
+            <select id="status" v-model="formData.status">
+              <option value="CONFIRMED">已确认</option>
+              <option value="TENTATIVE">待定</option>
+              <option value="CANCELLED">已取消</option>
+              <option value="DRAFT">草稿</option>
+              <option value="FINAL">最终</option>
+              <option value="NEEDS-ACTION">需要行动</option>
+              <option value="COMPLETED">已完成</option>
+              <option value="IN-PROCESS">正在处理</option>
+            </select>
+          </div>
+        </div>
         
         <div class="form-row">
           <div class="form-group">
@@ -37,7 +53,6 @@
               id="start"
               v-model="formData.start"
               type="datetime-local"
-              required
             />
           </div>
           
@@ -47,7 +62,6 @@
               id="end"
               v-model="formData.end"
               type="datetime-local"
-              required
             />
           </div>
         </div>
@@ -119,7 +133,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'save', event: CalendarEvent): void;
-  (e: 'close'): void;
+  (e: 'cancel'): void;
 }>();
 
 // 表单数据
@@ -131,7 +145,8 @@ const formData = reactive({
   allDay: false,
   location: '',
   reminderMinutes: 15,
-  categories: ''
+  categories: '',
+  status: 'CONFIRMED'
 });
 
 // 监听props.event的变化，初始化表单数据
@@ -154,10 +169,11 @@ watch(
       formData.description = newEvent.description || '';
       formData.start = ensureDate(newEvent.start);
       formData.end = ensureDate(newEvent.end);
-      formData.allDay = newEvent.allDay || false;
+      formData.allDay = newEvent.all_day || false;
       formData.location = newEvent.location || '';
-      formData.reminderMinutes = newEvent.reminderMinutes || 15;
+      formData.reminderMinutes = newEvent.reminder_minutes || 15;
       formData.categories = newEvent.categories || '';
+      formData.status = newEvent.status || 'CONFIRMED';
     } else {
       // 如果没有传入事件，重置为默认值
       resetForm();
@@ -176,6 +192,7 @@ const resetForm = () => {
   formData.location = '';
   formData.reminderMinutes = 15;
   formData.categories = '';
+  formData.status = 'CONFIRMED';
 };
 
 const save = () => {
@@ -185,22 +202,22 @@ const save = () => {
     description: formData.description,
     start: new Date(formData.start),
     end: new Date(formData.end),
-    allDay: formData.allDay,
-    reminderMinutes: formData.reminderMinutes,
+    all_day: formData.allDay,
+    reminder_minutes: Number(formData.reminderMinutes),
     created_at: props.event?.created_at || new Date(),
     updated_at: new Date(),
     sequence: props.event?.sequence || 0,
-    status: props.event?.status || 'CONFIRMED',
+    status: formData.status? formData.status : 'CONFIRMED',
     location: formData.location || undefined,
     categories: formData.categories || undefined
   } as CalendarEvent;
-
+  console.log(`emit save event: ${JSON.stringify(eventToSave, null, 2)}`)
   emit('save', eventToSave);
 };
 
 const cancel = () => {
   resetForm();
-  emit('close');
+  emit('cancel');
 };
 
 const onOverlayClick = () => {

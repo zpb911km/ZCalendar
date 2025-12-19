@@ -15,7 +15,7 @@
     （3）日程提醒功能的实现；(android notification)
 
 扩展要求：
-    （1）日历事件的导入导出；
+    （1）日历事件的导入导出； (没实现)
 
 ## 项目架构设计
 
@@ -42,20 +42,16 @@ src/
 │   │   ├── MonthView.vue       # 月视图
 │   │   ├── WeekView.vue        # 周视图
 │   │   └── DayView.vue         # 日视图
-│   ├── Event/            # 事件组件
-│   │   ├── EventCard.vue       # 事件卡片
-│   │   ├── EventEditor.vue     # 事件编辑器
-│   │   └── EventDetail.vue     # 事件详情
-│   └── Notification/     # 通知组件
-│       └── NotificationManager.vue
+│   └── Event/            # 事件组件
+│       ├── EventCard.vue       # 事件卡片s
+│       ├── EventEditor.vue     # 事件编辑器
+│       └── EventDetail.vue     # 事件详情
 ├── composables/          # Vue组合式函数
 │   ├── useCalendar.ts    # 日历逻辑
-│   ├── useEvents.ts      # 事件操作
-│   └── useNotifications.ts # 通知管理
+│   └── useEvents.ts      # 事件操作
 ├── services/             # 与后端交互的服务
 │   ├── calendarService.ts    # 日历服务
-│   ├── eventService.ts       # 事件服务
-│   └── notificationService.ts # 通知服务
+│   └── eventService.ts       # 事件服务
 ├── stores/               # 状态管理 (Pinia)
 │   ├── calendarStore.ts      # 日历状态
 │   └── eventStore.ts         # 事件状态
@@ -72,32 +68,9 @@ src/
     └── SettingsView.vue      # 设置页面
 ```
 
-#### 后端模块 (src-tauri/src/)
-```
-src-tauri/
-└── src/
-    ├── lib.rs              # Tauri命令导出
-    ├── main.rs             # 应用入口
-    ├── models/             # 数据模型
-    │   ├── event.rs        # 事件模型
-    │   ├── calendar.rs     # 日历模型
-    │   └── reminder.rs     # 提醒模型
-    ├── services/           # 业务逻辑服务
-    │   ├── calendar_service.rs   # 日历服务
-    │   ├── event_service.rs      # 事件服务
-    │   ├── notification_service.rs # 通知服务
-    │   └── ical_service.rs       # iCalendar服务
-    ├── storage/            # 数据存储
-    │   ├── database.rs     # 数据库操作
-    │   └── ical_storage.rs # iCalendar导入导出
-    └── utils/              # 工具函数
-        ├── date_utils.rs   # 日期处理
-        ├── ical_utils.rs   # RFC5545处理
-        └── notification.rs # 通知工具
-```
 
-### 4. 数据库设计
-使用Tauri的数据库插件（如Tauri ORM或SQLx），包含以下表：
+### 4. 数据库设计(sqlite)
+使用rust ORM，包含以下表：
 - events表：存储日历事件（标题、描述、时间、重复规则等）
 - reminders表：存储提醒信息
 - calendars表：存储日历信息（用于多个日历支持）

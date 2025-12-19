@@ -15,14 +15,14 @@ export const useCalendarStore = defineStore('calendar', {
     // 获取当前日历
     currentCalendar: (state) => {
       if (!state.currentCalendarId) {
-        return state.calendars.find(cal => cal.isPrimary) || state.calendars[0];
+        return state.calendars.find(cal => cal.is_primary) || state.calendars[0];
       }
       return state.calendars.find(cal => cal.id === state.currentCalendarId);
     },
     
     // 获取默认日历
     defaultCalendar: (state) => {
-      return state.calendars.find(cal => cal.isPrimary) || state.calendars[0];
+      return state.calendars.find(cal => cal.is_primary) || state.calendars[0];
     }
   },
 
@@ -46,7 +46,7 @@ export const useCalendarStore = defineStore('calendar', {
       try {
         const newCalendar = await calendarService.createCalendar(calendarData);
         this.calendars.push(newCalendar);
-        if (newCalendar.isPrimary) {
+        if (newCalendar.is_primary) {
           this.currentCalendarId = newCalendar.id;
         }
         return newCalendar;

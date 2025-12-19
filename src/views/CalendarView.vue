@@ -31,12 +31,14 @@
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
+        @date-click="onDateClick"
       />
       <DayView 
         v-else-if="currentView === 'day'"
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
+        @date-click="onDateClick"
       />
     </div>
     
@@ -57,7 +59,7 @@
         v-if="showEventEditor"
         :event="editingEvent || undefined"
         @save="onSaveEvent"
-        @close="showEventEditor = false"
+        @cancel="showEventEditor = false"
       />
     </teleport>
   </div>
@@ -104,42 +106,43 @@ const onEventClick = (event: CalendarEvent) => {
 
 const onDateClick = (date: Date) => {
   // 在指定日期创建新事件
+  console.log(`create event at ${date}`)
   editingEvent.value = {
     id: 0,
     title: '',
     description: '',
     start: date,
     end: new Date(date.getTime() + 60 * 60 * 1000), // 默认1小时后结束
-    allDay: false,
-    reminderMinutes: 15,
-    created_at: new Date(),
-    updated_at: new Date(),
+    all_day: false,
+    reminder_minutes: 15,
+    created_at: date,
+    updated_at: date,
     sequence: 0,
     status: 'CONFIRMED'
   } as CalendarEvent;
   showEventEditor.value = true;
 };
 
-const openEventEditor = (event?: CalendarEvent) => {
-  if (event) {
-    editingEvent.value = { ...event };
-  } else {
-    editingEvent.value = {
-      id: 0,
-      title: '',
-      description: '',
-      start: new Date(),
-      end: new Date(new Date().getTime() + 60 * 60 * 1000),
-      allDay: false,
-      reminderMinutes: 15,
-      created_at: new Date(),
-      updated_at: new Date(),
-      sequence: 0,
-      status: 'CONFIRMED'
-    } as CalendarEvent;
-  }
-  showEventEditor.value = true;
-};
+// const openEventEditor = (event?: CalendarEvent) => {
+//   if (event) {
+//     editingEvent.value = { ...event };
+//   } else {
+//     editingEvent.value = {
+//       id: 0,
+//       title: '',
+//       description: '',
+//       start: new Date(),
+//       end: new Date(new Date().getTime() + 60 * 60 * 1000),
+//       allDay: false,
+//       reminderMinutes: 15,
+//       created_at: new Date(),
+//       updated_at: new Date(),
+//       sequence: 0,
+//       status: 'CONFIRMED'
+//     } as CalendarEvent;
+//   }
+//   showEventEditor.value = true;
+// };
 
 const onEditEvent = (event: CalendarEvent) => {
   editingEvent.value = { ...event };
@@ -156,27 +159,21 @@ const onSaveEvent = async (eventData: CalendarEvent) => {
       }
       return date;
     };
+    console.log(`save event: ${JSON.stringify(eventData, null, 2)}`)
     
     if (eventData.id === 0) {
       // 创建新事件
       await eventStore.createEvent({
-        title: eventData.title,
-        description: eventData.description,
+        ...eventData,
         start: ensureDate(eventData.start),
         end: ensureDate(eventData.end),
-        allDay: eventData.allDay,
-        reminderMinutes: eventData.reminderMinutes,
       });
     } else {
       // 更新现有事件
       await eventStore.updateEvent({
-        id: eventData.id,
-        title: eventData.title,
-        description: eventData.description,
+        ...eventData,
         start: eventData.start ? ensureDate(eventData.start) : undefined,
         end: eventData.end ? ensureDate(eventData.end) : undefined,
-        allDay: eventData.allDay,
-        reminderMinutes: eventData.reminderMinutes,
       });
     }
     showEventEditor.value = false;
@@ -197,27 +194,6 @@ const onDeleteEvent = async (eventId: number) => {
   }
 };
 
-const importCalendar = async () => {
-  // 打开文件选择对话框
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.ics';
-  input.onchange = async (event: any) => {
-    const file = event.target.files[0];
-    if (file) {
-      try {
-        const content = await file.text();
-        // 调用后端导入功能
-        const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('import_ical', { icalContent: content });
-        eventStore.fetchAllEvents(); // 刷新事件列表
-      } catch (error) {
-        console.error('导入日历失败:', error);
-      }
-    }
-  };
-  input.click();
-};
 
 // 组件挂载时加载事件和日历
 onMounted(async () => {
@@ -271,6 +247,6 @@ onMounted(async () => {
 
 .calendar-content {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
 }
 </style>

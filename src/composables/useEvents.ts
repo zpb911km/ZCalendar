@@ -130,7 +130,7 @@ export function useEvents() {
       const checkDate = dateUtils.startOfDay(date);
       
       // 全天事件
-      if (event.allDay) {
+      if (event.all_day) {
         return (eventStart <= checkDate && eventEnd >= checkDate);
       }
       // 非全天事件

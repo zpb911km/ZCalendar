@@ -1,5 +1,5 @@
 /* 深色主题变量 */
-:root {
+[data-theme="dark"] {
   /* 主色调 (调整为适合深色背景的版本) */
   --primary-color: #0d6efd;
   --primary-dark: #0b5ed7;
@@ -24,16 +24,28 @@
   --info-color: #3bc9db;
   
   /* 背景色变体 */
-  --secondary-color: #6c757d;
+  --secondary-color: #3e3e3e;
   --secondary-light: #343a40;
   --input-background-color: #2d2d2d;
   --card-background-color: #1e1e1e;
   
   /* 日历特定颜色 (调整为适合深色主题) */
-  --today-highlight: #1a237e;
+  --today-highlight: #454548;
   --weekend-color: #2d2d2d;
   --event-color: #1e3a5f;
   --event-text-color: #7ebfff;
+
+  /* 事件颜色 */
+  --event-default-color: #f8f9fa;
+  --event-default-background-color: #363636;
+  --event-personal-color: #e9e2cc;
+  --event-personal-background-color: #3e4b65;
+  --event-work-color: #d6e495;
+  --event-work-background-color: #4f4d0a;
+  --event-important-color: #ecd2d5;
+  --event-important-background-color: #4f1313;
+  --event-meeting-color: #a2e39c;
+  --event-meeting-background-color: #0f310e;
 }
 
 /* 深色主题特定的按钮样式 */

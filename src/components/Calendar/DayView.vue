@@ -27,6 +27,7 @@
           :class="{ 'current-time': isCurrentTime(timeSlot.time) }"
           @click="onTimeSlotClick(timeSlot.time)"
         >
+          {{ timeSlot.time.getHours() }}:{{ timeSlot.time.getMinutes() }}
           <!-- 事件 -->
           <div
             v-for="event in getEventsForTimeSlot(timeSlot.time)"
@@ -106,7 +107,7 @@ const getEventsForTimeSlot = (time: Date): CalendarEvent[] => {
   
   return props.events.filter(event => {
     // 全天事件不显示在时间轴上
-    if (event.allDay) return false;
+    if (event.all_day) return false;
     
     const eventStart = ensureDate(event.start);
     const eventStartHour = eventStart.getHours();
@@ -270,7 +271,7 @@ const onTimeSlotClick = (time: Date) => {
 }
 
 .time-slot.current-time {
-  background-color: var(--today-highlight);
+  background-color: var(--primary-color);
 }
 
 .event-item {

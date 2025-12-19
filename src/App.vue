@@ -9,20 +9,22 @@
     <main class="main-content">
       <router-view />
     </main>
-    
-    <!-- 通知管理器 -->
-    <NotificationManager />
+  
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import NotificationManager from './components/Notification/NotificationManager.vue';
+import { themeManager } from './utils/themeManager';
 // import { useRouter } from 'vue-router'; // 未使用的router变量
+
 
 onMounted(() => {
   // 初始化应用
   console.log('ZCalendar应用已启动');
+  
+  // 确保主题已加载
+  themeManager.loadSettings();
 });
 </script>
 
@@ -43,6 +45,7 @@ onMounted(() => {
   background-color: var(--input-background-color);
   border-bottom: 1px solid var(--border-color);
   padding: 0 20px;
+  margin-top: 2rem;
 }
 
 .nav-link {
@@ -63,7 +66,7 @@ onMounted(() => {
 
 
 .main-content {
-  flex: 1;
-  overflow: auto;
+  /* flex: 1; */
+  overflow: hidden;
 }
 </style>

@@ -1,13 +1,13 @@
 <template>
   <div 
     class="event-card"
-    :class="{ 'all-day': event.allDay }"
-    :style="{ backgroundColor: getEventColor }"
+    :class="{ 'all-day': event.all_day }"
+    :style="{ backgroundColor: getEventBackgroundColor, color: getEventColor }"
     @click="onEventClick"
   >
     <div class="event-content">
       <div class="event-title">{{ event.title }}</div>
-      <div v-if="!event.allDay" class="event-time">
+      <div v-if="!event.all_day" class="event-time">
         {{ formatTime(ensureDate(event.start)) }} - {{ formatTime(ensureDate(event.end)) }}
       </div>
       <div v-if="event.location" class="event-location">
@@ -49,15 +49,31 @@ const emit = defineEmits<{
 
 // 计算属性
 const getEventColor = computed(() => {
-  // 根据事件类型返回不同的颜色
-  if (props.event.categories?.includes('工作')) {
-    return 'var(--primary-color)';
-  } else if (props.event.categories?.includes('个人')) {
-    return 'var(--success-color)';
+  if (props.event.categories?.includes('个人')) {
+    return 'var(--event-personal-color)';
+  } else if (props.event.categories?.includes('工作')) {
+    return 'var(--event-work-color)';
   } else if (props.event.categories?.includes('重要')) {
-    return 'var(--danger-color)';
+    return 'var(--event-important-color)';
+  } else if (props.event.categories?.includes('会议')) {
+    return 'var(--event-meeting-color)';
+  } else {
+    return 'var(--event-default-color)';
   }
-  return 'var(--secondary-color)';
+});
+
+const getEventBackgroundColor = computed(() => {
+  if (props.event.categories?.includes('个人')) {
+    return 'var(--event-personal-background-color)';
+  } else if (props.event.categories?.includes('工作')) {
+    return 'var(--event-work-background-color)';
+  } else if (props.event.categories?.includes('重要')) {
+    return 'var(--event-important-background-color)';
+  } else if (props.event.categories?.includes('会议')) {
+    return 'var(--event-meeting-background-color)';
+  } else {
+    return 'var(--event-default-background-color)';
+  }
 });
 
 const onEventClick = () => {
@@ -77,6 +93,7 @@ const onEventClick = () => {
   overflow: hidden;
   display: flex;
   align-items: center;
+  min-height: 2rem;
 }
 
 .event-card:hover {

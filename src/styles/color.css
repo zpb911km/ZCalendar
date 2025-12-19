@@ -1,5 +1,5 @@
 /* 全局颜色变量 - 浅色主题 */
-:root {
+:root, [data-theme="light"] {
   /* 主色调 */
   --primary-color: #007bff;
   --primary-dark: #0056b3;
@@ -24,7 +24,7 @@
   --info-color: #17a2b8;
   
   /* 背景色变体 */
-  --secondary-color: #6c757d;
+  --secondary-color: #cfd9e2;
   --secondary-light: #e9ecef;
   --input-background-color: #f8f9fa;
   --card-background-color: #ffffff;
@@ -34,6 +34,18 @@
   --weekend-color: #f8f9fa;
   --event-color: #d1ecf1;
   --event-text-color: #0c5460;
+
+  /* 事件颜色 */
+  --event-default-color: #000000;
+  --event-default-background-color: #e7e7e7;
+  --event-personal-color: #000000;
+  --event-personal-background-color: #d4e8fc;
+  --event-work-color: #585a4b;
+  --event-work-background-color: #cac9a4;
+  --event-important-color: #3b040a;
+  --event-important-background-color: #f2929a;
+  --event-meeting-color: #0f2d23;
+  --event-meeting-background-color: #b6d7b9;
 }
 
 /* 按钮样式 */
@@ -64,7 +76,7 @@
 }
 
 .btn-secondary:hover {
-  background-color: #5a6268;
+  background-color: rgb(112, 123, 131);
 }
 
 .btn-success {

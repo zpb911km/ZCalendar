@@ -82,6 +82,7 @@ export const useEventStore = defineStore('event', {
     async createEvent(eventData: CreateEventDto) {
       this.loading = true;
       this.error = null;
+      console.log(`creating event: ${JSON.stringify(eventData, null, 2)}`);
       try {
         const newEvent = await eventService.createEvent(eventData);
         this.events.push(newEvent);
@@ -98,6 +99,7 @@ export const useEventStore = defineStore('event', {
     async updateEvent(eventData: UpdateEventDto) {
       this.loading = true;
       this.error = null;
+      console.log(`updating event: ${JSON.stringify(eventData, null, 2)}`);
       try {
         const updatedEvent = await eventService.updateEvent(eventData);
         const index = this.events.findIndex(e => e.id === eventData.id);

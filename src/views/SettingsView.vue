@@ -131,6 +131,8 @@
         </div>
       </div>
 
+
+
       <div class="settings-section">
         <h2>关于</h2>
         <div class="about-info">
@@ -148,6 +150,7 @@ import { ref, onMounted } from 'vue';
 import { calendarService } from '@/services/calendarService';
 import { Calendar } from '@/types/calendar';
 import { invoke } from '@tauri-apps/api/core';
+import { themeManager } from '@/utils/themeManager';
 
 // 设置状态
 const theme = ref('auto');
@@ -172,26 +175,20 @@ onMounted(() => {
 });
 
 const loadSettings = () => {
-  const savedTheme = localStorage.getItem('theme') || 'auto';
-  const savedPrimaryColor = localStorage.getItem('primaryColor') || '#007bff';
+  const settings = themeManager.getSettings();
   const savedNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
   const savedDefaultReminder = parseInt(localStorage.getItem('defaultReminderMinutes') || '15');
   const savedShowWeekNumbers = localStorage.getItem('showWeekNumbers') === 'true';
   const savedWorkdayStart = localStorage.getItem('workdayStart') || '09:00';
   const savedWorkdayEnd = localStorage.getItem('workdayEnd') || '18:00';
 
-  theme.value = savedTheme;
-  primaryColor.value = savedPrimaryColor;
+  theme.value = settings.theme;
+  primaryColor.value = settings.primaryColor;
   notificationsEnabled.value = savedNotificationsEnabled;
   defaultReminderMinutes.value = savedDefaultReminder;
   showWeekNumbers.value = savedShowWeekNumbers;
   workdayStart.value = savedWorkdayStart;
   workdayEnd.value = savedWorkdayEnd;
-
-  // 应用主题
-  applyTheme(savedTheme);
-  // 应用主色调
-  applyPrimaryColor(savedPrimaryColor);
 };
 
 const loadCalendars = async () => {
@@ -203,45 +200,25 @@ const loadCalendars = async () => {
 };
 
 const changeTheme = () => {
-  localStorage.setItem('theme', theme.value);
-  applyTheme(theme.value);
+  themeManager.setTheme(theme.value as 'light' | 'dark' | 'auto');
 };
 
-const applyTheme = (selectedTheme: string) => {
-  // 根据选择的主题应用CSS变量
-  const root = document.documentElement;
+// const applyTheme = (selectedTheme: string) => {
+//   // 根据选择的主题设置CSS类，CSS文件中已经定义了完整的主题
+//   const root = document.documentElement;
   
-  if (selectedTheme === 'dark' || 
-      (selectedTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    // 深色主题变量 - 与 dark-color.css 中的变量值保持一致
-    root.style.setProperty('--background-color', '#121212');
-    root.style.setProperty('--text-color', '#e0e0e0');
-    root.style.setProperty('--text-secondary-color', '#a0a0a0');
-    root.style.setProperty('--border-color', '#444444');
-    root.style.setProperty('--input-background-color', '#2d2d2d');
-    root.style.setProperty('--modal-background-color', '#1e1e1e');
-    root.style.setProperty('--secondary-color', '#6c757d');
-  } else {
-    // 浅色主题变量 - 与 color.css 中的变量值保持一致
-    root.style.setProperty('--background-color', '#ffffff');
-    root.style.setProperty('--text-color', '#212529');
-    root.style.setProperty('--text-secondary-color', '#6c757d');
-    root.style.setProperty('--border-color', '#dee2e6');
-    root.style.setProperty('--input-background-color', '#f8f9fa');
-    root.style.setProperty('--modal-background-color', '#ffffff');
-    root.style.setProperty('--secondary-color', '#e0e0e0');
-  }
-};
+//   if (selectedTheme === 'dark' || 
+//       (selectedTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+//     root.setAttribute('data-theme', 'dark');
+//   } else {
+//     root.setAttribute('data-theme', 'light');
+//   }
+// };
 
 const changePrimaryColor = () => {
-  localStorage.setItem('primaryColor', primaryColor.value);
-  applyPrimaryColor(primaryColor.value);
+  themeManager.setPrimaryColor(primaryColor.value);
 };
 
-const applyPrimaryColor = (color: string) => {
-  const root = document.documentElement;
-  root.style.setProperty('--primary-color', color);
-};
 
 const toggleNotifications = () => {
   localStorage.setItem('notificationsEnabled', notificationsEnabled.value.toString());
@@ -273,7 +250,9 @@ const createCalendar = async () => {
     const newCalendar = await calendarService.createCalendar({
       name: newCalendarName.value,
       color: newCalendarColor.value,
-      isPrimary: false
+      is_primary: false,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
     calendars.value.push(newCalendar);
     newCalendarName.value = '';
@@ -379,7 +358,7 @@ const clearAllEvents = async () => {
 .settings-view {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 56px - 2rem);
   padding: 20px;
   background-color: var(--background-color);
   color: var(--text-color);

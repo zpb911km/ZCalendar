@@ -2,9 +2,9 @@ export interface Calendar {
   id: string;
   name: string;
   color: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isPrimary: boolean;
+  created_at: Date;
+  updated_at: Date;
+  is_primary: boolean;
 }
 
 export interface CalendarViewType {

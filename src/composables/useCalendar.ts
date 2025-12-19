@@ -100,7 +100,7 @@ export function useCalendar(initialDate: Date = new Date()) {
       
       // 设置默认日历
       if (calendars.value.length > 0 && !currentCalendar.value) {
-        const primaryCal = calendars.value.find(cal => cal.isPrimary);
+        const primaryCal = calendars.value.find(cal => cal.is_primary);
         currentCalendar.value = primaryCal || calendars.value[0];
       }
     } catch (err) {
@@ -122,7 +122,9 @@ export function useCalendar(initialDate: Date = new Date()) {
       const newCalendar = await calendarService.createCalendar({ 
         name, 
         color,
-        isPrimary: false 
+        is_primary: false,
+        created_at: new Date(),
+        updated_at: new Date()
       });
       calendars.value.push(newCalendar);
       

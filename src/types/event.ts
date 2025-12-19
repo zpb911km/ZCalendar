@@ -4,12 +4,12 @@ export interface CalendarEvent {
   description?: string;
   start: string | Date;  // 后端返回字符串，前端处理为Date
   end: string | Date;
-  allDay: boolean;
-  reminderMinutes: number;
+  all_day: boolean;
+  reminder_minutes: number;
   created_at: string | Date;
   updated_at: string | Date;
-  recurrenceRule?: string;
-  recurrenceId?: string;
+  recurrence_rule?: string;
+  recurrence_id?: string;
   sequence: number;
   status: string;
   location?: string;
@@ -18,7 +18,7 @@ export interface CalendarEvent {
   url?: string;
   categories?: string;
   priority?: number;
-  calendarId?: string;
+  calendar_id?: string;
 }
 
 export interface CreateEventDto {
@@ -26,9 +26,9 @@ export interface CreateEventDto {
   description?: string;
   start: Date;
   end: Date;
-  allDay: boolean;
-  reminderMinutes: number;
-  recurrenceRule?: string;
+  all_day: boolean;
+  reminder_minutes: number;
+  recurrence_rule?: string;
   location?: string;
   url?: string;
   categories?: string;
@@ -42,9 +42,9 @@ export interface UpdateEventDto {
   description?: string;
   start?: Date;
   end?: Date;
-  allDay?: boolean;
-  reminderMinutes?: number;
-  recurrenceRule?: string;
+  all_day?: boolean;
+  reminder_minutes?: number;
+  recurrence_rule?: string;
   location?: string;
   url?: string;
   categories?: string;

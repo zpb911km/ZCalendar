@@ -102,8 +102,8 @@ const onDateClick = (date: Date) => {
     description: '',
     start: date,
     end: new Date(date.getTime() + 60 * 60 * 1000), // 默认1小时后结束
-    allDay: false,
-    reminderMinutes: 15,
+    all_day: false,
+    reminder_minutes: 15,
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
@@ -135,8 +135,8 @@ const onSaveEvent = async (eventData: CalendarEvent) => {
         description: eventData.description,
         start: ensureDate(eventData.start),
         end: ensureDate(eventData.end),
-        allDay: eventData.allDay,
-        reminderMinutes: eventData.reminderMinutes,
+        all_day: eventData.all_day,
+        reminder_minutes: eventData.reminder_minutes,
       });
     } else {
       // 更新现有事件
@@ -146,8 +146,8 @@ const onSaveEvent = async (eventData: CalendarEvent) => {
         description: eventData.description,
         start: eventData.start ? ensureDate(eventData.start) : undefined,
         end: eventData.end ? ensureDate(eventData.end) : undefined,
-        allDay: eventData.allDay,
-        reminderMinutes: eventData.reminderMinutes,
+        all_day: eventData.all_day,
+        reminder_minutes: eventData.reminder_minutes,
       });
     }
     showEventEditor.value = false;

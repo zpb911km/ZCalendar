@@ -11,13 +11,6 @@
 
     <main class="event-main">
       <div class="event-filters">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="搜索事件..." 
-          class="search-input"
-          @keyup.enter="searchEvents"
-        />
         <select v-model="filterCategory" class="category-filter">
           <option value="">所有分类</option>
           <option v-for="category in categories" :key="category" :value="category">
@@ -31,6 +24,13 @@
           <option value="thisWeek">本周</option>
           <option value="thisMonth">本月</option>
         </select>
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          placeholder="搜索事件..." 
+          class="search-input"
+          @keyup.enter="searchEvents"
+        />
       </div>
 
       <div class="event-list">
@@ -92,8 +92,8 @@ const editingEvent = ref<CalendarEvent>({
   description: '',
   start: new Date(),
   end: new Date(new Date().getTime() + 60 * 60 * 1000),
-  allDay: false,
-  reminderMinutes: 15,
+  all_day: false,
+  reminder_minutes: 15,
   created_at: new Date(),
   updated_at: new Date(),
   sequence: 0,
@@ -105,8 +105,8 @@ const selectedEvent = ref<CalendarEvent>({
   description: '',
   start: new Date(),
   end: new Date(new Date().getTime() + 60 * 60 * 1000),
-  allDay: false,
-  reminderMinutes: 15,
+  all_day: false,
+  reminder_minutes: 15,
   created_at: new Date(),
   updated_at: new Date(),
   sequence: 0,
@@ -196,8 +196,8 @@ const openEventEditor = (event?: CalendarEvent) => {
     description: '',
     start: new Date(),
     end: new Date(new Date().getTime() + 60 * 60 * 1000),
-    allDay: false,
-    reminderMinutes: 15,
+    all_day: false,
+    reminder_minutes: 15,
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
@@ -214,8 +214,8 @@ const closeEventEditor = () => {
     description: '',
     start: new Date(),
     end: new Date(new Date().getTime() + 60 * 60 * 1000),
-    allDay: false,
-    reminderMinutes: 15,
+    all_day: false,
+    reminder_minutes: 15,
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
@@ -236,34 +236,15 @@ const saveEvent = async (eventData: CalendarEvent) => {
   try {
     if (eventData.id) {
       await eventStore.updateEvent({
-        id: eventData.id,
-        title: eventData.title,
-        description: eventData.description,
+        ...eventData,
         start: eventData.start as Date,
         end: eventData.end as Date,
-        allDay: eventData.allDay,
-        reminderMinutes: eventData.reminderMinutes,
-        recurrenceRule: eventData.recurrenceRule,
-        location: eventData.location,
-        url: eventData.url,
-        categories: eventData.categories,
-        priority: eventData.priority,
-        status: eventData.status
       });
     } else {
       await eventStore.createEvent({
-        title: eventData.title,
-        description: eventData.description,
+        ...eventData,
         start: eventData.start as Date,
         end: eventData.end as Date,
-        allDay: eventData.allDay,
-        reminderMinutes: eventData.reminderMinutes,
-        recurrenceRule: eventData.recurrenceRule,
-        location: eventData.location,
-        url: eventData.url,
-        categories: eventData.categories,
-        priority: eventData.priority,
-        status: eventData.status
       });
     }
     closeEventEditor();
@@ -327,7 +308,7 @@ const exportCalendar = async () => {
 .event-view {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 56px - 2rem);
   padding: 20px;
   background-color: var(--background-color);
   color: var(--text-color);

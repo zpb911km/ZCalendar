@@ -43,7 +43,7 @@
           >
             <div class="event-content">
               <div class="event-title">{{ event.title }}</div>
-              <div v-if="!event.allDay" class="event-time">
+              <div v-if="!event.all_day" class="event-time">
                 {{ formatTime(ensureDate(event.start)) }} - {{ formatTime(ensureDate(event.end)) }}
               </div>
             </div>
@@ -113,7 +113,7 @@ const getEventsForTimeSlot = (_date: Date, time: Date): CalendarEvent[] => {
   
   return props.events.filter(event => {
     // 全天事件不显示在时间轴上
-    if (event.allDay) return false;
+    if (event.all_day) return false;
     
     const eventStart = ensureDate(event.start);
     const eventStartHour = eventStart.getHours();
@@ -223,7 +223,7 @@ const onTimeSlotClick = (date: Date, time: Date) => {
 }
 
 .date-header-cell.today {
-  background-color: var(--today-highlight);
+  background-color: var(--primary-color);
   font-weight: 600;
 }
 

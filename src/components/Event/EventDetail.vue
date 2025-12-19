@@ -14,7 +14,7 @@
             <span class="info-label">时间</span>
             <span class="info-value">
               {{ formatDateTime(event.start) }}
-              <span v-if="!event.allDay"> - {{ formatDateTime(event.end) }}</span>
+              <span v-if="!event.all_day"> - {{ formatDateTime(event.end) }}</span>
               <span v-else> (全天)</span>
             </span>
           </div>
@@ -37,7 +37,7 @@
           <div class="info-item">
             <span class="info-label">提醒</span>
             <span class="info-value">
-              {{ event.reminderMinutes > 0 ? `${event.reminderMinutes}分钟前` : '无提醒' }}
+              {{ event.reminder_minutes > 0 ? `${event.reminder_minutes}分钟前` : '无提醒' }}
             </span>
           </div>
           

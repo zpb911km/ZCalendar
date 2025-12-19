@@ -13,8 +13,8 @@ const convertCalendarToBackend = (calendar: any): any => {
 const convertCalendarFromBackend = (backendCalendar: any): Calendar => {
   return {
     ...backendCalendar,
-    createdAt: typeof backendCalendar.createdAt === 'string' ? new Date(backendCalendar.createdAt) : backendCalendar.createdAt,
-    updatedAt: typeof backendCalendar.updatedAt === 'string' ? new Date(backendCalendar.updatedAt) : backendCalendar.updatedAt,
+    created_at: typeof backendCalendar.createdAt === 'string' ? new Date(backendCalendar.createdAt) : backendCalendar.createdAt,
+    updated_at: typeof backendCalendar.updatedAt === 'string' ? new Date(backendCalendar.updatedAt) : backendCalendar.updatedAt,
   } as Calendar;
 };
 
@@ -30,7 +30,7 @@ export const calendarService = {
     // 确保isPrimary有默认值
     const calendarWithDefaults = {
       ...calendar,
-      isPrimary: calendar.isPrimary ?? false
+      isPrimary: calendar.is_primary ?? false
     };
     const backendCalendar = convertCalendarToBackend(calendarWithDefaults);
     const result = await invoke<any>('create_calendar', { calendar: backendCalendar });

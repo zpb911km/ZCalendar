@@ -36,11 +36,11 @@
               v-for="event in getEventsForDay(day)"
               :key="event.id"
               class="event-item"
-              :style="{ backgroundColor: getEventColor(event) }"
+              :style="{ color: getEventColor(event), backgroundColor: getEventBackgroundColor(event) }"
               @click.stop="onEventClick(event)"
             >
               <span class="event-title">{{ event.title }}</span>
-              <span v-if="!event.allDay" class="event-time">{{ formatTime(ensureDate(event.start)) }}</span>
+              <span v-if="!event.all_day" class="event-time">{{ formatTime(ensureDate(event.start)) }}</span>
             </div>
             
             <div
@@ -97,6 +97,34 @@ const weeks = computed(() => {
   return weeksArray;
 });
 
+const getEventColor = (event: CalendarEvent) => {
+  if (event.categories?.includes('个人')) {
+    return 'var(--event-personal-color)';
+  } else if (event.categories?.includes('工作')) {
+    return 'var(--event-work-color)';
+  } else if (event.categories?.includes('重要')) {
+    return 'var(--event-important-color)';
+  } else if (event.categories?.includes('会议')) {
+    return 'var(--event-meeting-color)';
+  } else {
+    return 'var(--event-default-color)';
+  }
+};
+
+const getEventBackgroundColor = (event: CalendarEvent) => {
+  if (event.categories?.includes('个人')) {
+    return 'var(--event-personal-background-color)';
+  } else if (event.categories?.includes('工作')) {
+    return 'var(--event-work-background-color)';
+  } else if (event.categories?.includes('重要')) {
+    return 'var(--event-important-background-color)';
+  } else if (event.categories?.includes('会议')) {
+    return 'var(--event-meeting-background-color)';
+  } else {
+    return 'var(--event-default-background-color)';
+  }
+};
+
 const currentMonth = computed(() => props.currentDate.getMonth());
 const today = computed(() => dateUtils.startOfDay(new Date()));
 
@@ -118,7 +146,7 @@ const getEventsForDay = (date: Date): CalendarEvent[] => {
     const eventStart = ensureDate(event.start);
     
     // 全天事件
-    if (event.allDay) {
+    if (event.all_day) {
       const eventStartDate = dateUtils.startOfDay(eventStart);
       return dateUtils.isSameDay(eventStartDate, startOfDay);
     }
@@ -135,7 +163,7 @@ const hasMoreEvents = (date: Date): boolean => {
   endOfDay.setDate(endOfDay.getDate() + 1);
   
   const allDayEvents = props.events.filter(event => {
-    if (event.allDay) {
+    if (event.all_day) {
       const eventStartDate = dateUtils.startOfDay(ensureDate(event.start));
       return dateUtils.isSameDay(eventStartDate, startOfDay);
     }
@@ -143,7 +171,7 @@ const hasMoreEvents = (date: Date): boolean => {
   });
   
   const timedEvents = props.events.filter(event => {
-    if (!event.allDay) {
+    if (!event.all_day) {
       const eventStart = ensureDate(event.start);
       return eventStart >= startOfDay && eventStart < endOfDay;
     }
@@ -160,7 +188,7 @@ const getMoreEventsCount = (date: Date): number => {
   endOfDay.setDate(endOfDay.getDate() + 1);
   
   const allDayEvents = props.events.filter(event => {
-    if (event.allDay) {
+    if (event.all_day) {
       const eventStartDate = dateUtils.startOfDay(ensureDate(event.start));
       return dateUtils.isSameDay(eventStartDate, startOfDay);
     }
@@ -168,7 +196,7 @@ const getMoreEventsCount = (date: Date): number => {
   });
   
   const timedEvents = props.events.filter(event => {
-    if (!event.allDay) {
+    if (!event.all_day) {
       const eventStart = ensureDate(event.start);
       return eventStart >= startOfDay && eventStart < endOfDay;
     }
@@ -178,19 +206,6 @@ const getMoreEventsCount = (date: Date): number => {
   const totalEvents = allDayEvents.length + timedEvents.length;
   return Math.max(0, totalEvents - 3);
 };
-
-const getEventColor = (event: CalendarEvent): string => {
-  // 根据事件类型返回不同的颜色
-  if (event.categories?.includes('工作')) {
-    return 'var(--primary-color)'; // 蓝色
-  } else if (event.categories?.includes('个人')) {
-    return 'var(--success-color)'; // 绿色
-  } else if (event.categories?.includes('重要')) {
-    return 'var(--danger-color)'; // 红色
-  }
-  return 'var(--secondary-color)'; // 灰色
-};
-
 const formatTime = (date: Date): string => {
   return dateUtils.formatLocal(date, 'HH:mm');
 };
@@ -215,7 +230,7 @@ const showMoreEvents = (date: Date) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% - 56px - 2rem);
 }
 
 .weekdays-header {
@@ -255,7 +270,7 @@ const showMoreEvents = (date: Date) => {
   padding: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  min-height: 120px;
+  /* min-height: 120px; */
   position: relative;
 }
 
@@ -268,7 +283,7 @@ const showMoreEvents = (date: Date) => {
 }
 
 .day-cell.today {
-  background-color: var(--today-highlight);
+  background-color: var(--primary-color);
   position: relative;
 }
 
@@ -284,7 +299,7 @@ const showMoreEvents = (date: Date) => {
 }
 
 .day-cell.other-month {
-  background-color: var(--secondary-light);
+  background-color: var(--secondary-color);
   color: var(--text-secondary-color);
 }
 
