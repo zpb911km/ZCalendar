@@ -34,7 +34,7 @@
           @click="onTimeSlotClick(day.date, timeSlot.time)"
         >
           <!-- 事件 -->
-          <div
+          <!-- <div
             v-for="event in getEventsForTimeSlot(day.date, timeSlot.time)"
             :key="event.id"
             class="event-item"
@@ -47,6 +47,25 @@
                 {{ formatTime(ensureDate(event.start)) }} - {{ formatTime(ensureDate(event.end)) }}
               </div>
             </div>
+          </div> -->
+          <div
+            v-if="getEventsForTimeSlot(day.date, timeSlot.time).length > 0"
+            class="event-item"
+            :style="getEventStyle(getEventsForTimeSlot(day.date, timeSlot.time)[0], day.date)"
+            @click.stop="onEventClick(getEventsForTimeSlot(day.date, timeSlot.time)[0])"
+          >
+            <div class="event-content"> 
+              <div class="event-title">{{ getEventsForTimeSlot(day.date, timeSlot.time)[0].title }}</div>
+              <div v-if="!getEventsForTimeSlot(day.date, timeSlot.time)[0].all_day" class="event-time">
+                {{ formatTime(ensureDate(getEventsForTimeSlot(day.date, timeSlot.time)[0].start)) }} - {{ formatTime(ensureDate(getEventsForTimeSlot(day.date, timeSlot.time)[0].end)) }}
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="getEventsForTimeSlot(day.date, timeSlot.time).length > 1"
+            class="more-events"
+            >
+            + {{ getEventsForTimeSlot(day.date, timeSlot.time).length - 1 }} more
           </div>
         </div>
       </div>
@@ -83,7 +102,7 @@ const weekDays = computed(() => {
   const dates = dateUtils.getWeekDates(props.currentDate);
   return dates.map(date => ({
     date,
-    dayOfWeek: dateUtils.getWeekdayName(date).substring(0, 1) // 只取第一个字符，如"一"
+    dayOfWeek: dateUtils.getWeekdayName(date)
   }));
 });
 
@@ -144,30 +163,44 @@ const getEventStyle = (event: CalendarEvent, _date: Date): Record<string, string
   const top = (startHour + startMinute / 60) * 60; // 每小时60px
   
   return {
-    top: `${top}px`,
-    height: `${height}px`,
-    backgroundColor: getEventColor(event),
-    position: 'absolute',
-    left: '2px',
-    right: '2px',
+    backgroundColor: getEventBackgroundColor(event),
+    color: getEventColor(event),
+    // height: "1rem",
+    // width: "1rem"
     borderRadius: '4px',
     padding: '4px',
     overflow: 'hidden',
-    fontSize: '12px',
-    zIndex: '1'
+    fontSize: '11px',
+    zIndex: '1',
   };
 };
 
-const getEventColor = (event: CalendarEvent): string => {
-  // 根据事件类型返回不同的颜色
-  if (event.categories?.includes('工作')) {
-    return 'var(--primary-color)'; // 蓝色
-  } else if (event.categories?.includes('个人')) {
-    return 'var(--success-color)'; // 绿色
+const getEventColor = (event: CalendarEvent) => {
+  if (event.categories?.includes('个人')) {
+    return 'var(--event-personal-color)';
+  } else if (event.categories?.includes('工作')) {
+    return 'var(--event-work-color)';
   } else if (event.categories?.includes('重要')) {
-    return 'var(--danger-color)'; // 红色
+    return 'var(--event-important-color)';
+  } else if (event.categories?.includes('会议')) {
+    return 'var(--event-meeting-color)';
+  } else {
+    return 'var(--event-default-color)';
   }
-  return 'var(--secondary-color)'; // 灰色
+};
+
+const getEventBackgroundColor = (event: CalendarEvent) => {
+  if (event.categories?.includes('个人')) {
+    return 'var(--event-personal-background-color)';
+  } else if (event.categories?.includes('工作')) {
+    return 'var(--event-work-background-color)';
+  } else if (event.categories?.includes('重要')) {
+    return 'var(--event-important-background-color)';
+  } else if (event.categories?.includes('会议')) {
+    return 'var(--event-meeting-background-color)';
+  } else {
+    return 'var(--event-default-background-color)';
+  }
 };
 
 const formatTime = (date: Date): string => {
@@ -308,5 +341,14 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   font-size: 10px;
   opacity: 0.8;
   margin-top: 2px;
+}
+
+.more-events {
+  color: var(--text-secondary-color);
+  font-size: 8px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background-color: var(--secondary-light);
 }
 </style>

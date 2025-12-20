@@ -5,7 +5,7 @@
       <div class="event-actions">
         <button @click="openEventEditor()" class="btn btn-primary">添加事件</button>
         <button @click="searchEvents" class="btn btn-secondary">搜索</button>
-        <button @click="exportCalendar" class="btn btn-secondary">导出日历</button>
+        <!-- <button @click="exportCalendar" class="btn btn-secondary">导出日历</button> -->
       </div>
     </header>
 
@@ -162,9 +162,11 @@ const filteredEvents = computed(() => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const endOfWeek = new Date(today);
-    endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    const endOfWeek = new Date();
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
     result = result.filter(event => {
       const eventDate = new Date(event.start);
@@ -174,9 +176,9 @@ const filteredEvents = computed(() => {
         case 'tomorrow':
           return eventDate.toDateString() === tomorrow.toDateString();
         case 'thisWeek':
-          return eventDate >= today && eventDate <= endOfWeek;
+          return eventDate >= startOfWeek && eventDate <= endOfWeek;
         case 'thisMonth':
-          return eventDate >= today && eventDate <= endOfMonth;
+          return eventDate >= startOfMonth && eventDate <= endOfMonth;
         default:
           return true;
       }
@@ -308,10 +310,10 @@ const exportCalendar = async () => {
 .event-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 2rem);
   padding: 20px;
   background-color: var(--background-color);
   color: var(--text-color);
+  height: calc(100% - 40px);
 }
 
 .event-header {

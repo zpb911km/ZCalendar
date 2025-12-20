@@ -115,8 +115,8 @@ const onDateClick = (date: Date) => {
     end: new Date(date.getTime() + 60 * 60 * 1000), // 默认1小时后结束
     all_day: false,
     reminder_minutes: 15,
-    created_at: date,
-    updated_at: date,
+    created_at: new Date(),
+    updated_at: new Date(),
     sequence: 0,
     status: 'CONFIRMED'
   } as CalendarEvent;
@@ -206,7 +206,7 @@ onMounted(async () => {
 .calendar-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 56px - 2rem);
   width: 100%;
   background-color: var(--background-color);
   color: var(--text-color);

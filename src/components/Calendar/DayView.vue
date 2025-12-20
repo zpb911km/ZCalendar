@@ -1,13 +1,13 @@
 <template>
   <div class="day-view">
     <!-- 日期头部 -->
-    <div class="day-header">
+    <!-- <div class="day-header">
       <div class="date-info">
         <div class="day-of-week">{{ dayOfWeek }}</div>
         <div class="date-number">{{ dateNumber }}</div>
         <div class="full-date">{{ fullDate }}</div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 时间轴 -->
     <div class="time-axis">
@@ -27,7 +27,7 @@
           :class="{ 'current-time': isCurrentTime(timeSlot.time) }"
           @click="onTimeSlotClick(timeSlot.time)"
         >
-          {{ timeSlot.time.getHours() }}:{{ timeSlot.time.getMinutes() }}
+          <!-- {{ timeSlot.time.getHours() }}:{{ timeSlot.time.getMinutes() }} -->
           <!-- 事件 -->
           <div
             v-for="event in getEventsForTimeSlot(timeSlot.time)"
@@ -84,7 +84,7 @@ const dayOfWeek = computed(() => dateUtils.getWeekdayName(props.currentDate));
 const dateNumber = computed(() => props.currentDate.getDate());
 
 const fullDate = computed(() => {
-  return dateUtils.formatLocal(props.currentDate, 'yyyy年MM月dd日 EEEE');
+  return dateUtils.formatLocal(props.currentDate, 'yyyy年MM月dd日');
 });
 
 const timeSlots = computed(() => {
@@ -138,12 +138,13 @@ const getEventStyle = (event: CalendarEvent): Record<string, string> => {
   const top = (startHour + startMinute / 60) * 60; // 每小时60px
   
   return {
-    top: `${top}px`,
-    height: `${height}px`,
-    backgroundColor: getEventColor(event),
-    position: 'absolute',
-    left: '4px',
-    right: '4px',
+    // top: `${top}px`,
+    // height: `${height}px`,
+    backgroundColor: getEventBackgroundColor(event),
+    color: getEventColor(event),
+    // position: 'absolute',
+    // left: '4px',
+    // right: '4px',
     borderRadius: '4px',
     padding: '4px',
     overflow: 'hidden',
@@ -152,16 +153,32 @@ const getEventStyle = (event: CalendarEvent): Record<string, string> => {
   };
 };
 
-const getEventColor = (event: CalendarEvent): string => {
-  // 根据事件类型返回不同的颜色
-  if (event.categories?.includes('工作')) {
-    return 'var(--primary-color)'; // 蓝色
-  } else if (event.categories?.includes('个人')) {
-    return 'var(--success-color)'; // 绿色
+const getEventColor = (event: CalendarEvent) => {
+  if (event.categories?.includes('个人')) {
+    return 'var(--event-personal-color)';
+  } else if (event.categories?.includes('工作')) {
+    return 'var(--event-work-color)';
   } else if (event.categories?.includes('重要')) {
-    return 'var(--danger-color)'; // 红色
+    return 'var(--event-important-color)';
+  } else if (event.categories?.includes('会议')) {
+    return 'var(--event-meeting-color)';
+  } else {
+    return 'var(--event-default-color)';
   }
-  return 'var(--secondary-color)'; // 灰色
+};
+
+const getEventBackgroundColor = (event: CalendarEvent) => {
+  if (event.categories?.includes('个人')) {
+    return 'var(--event-personal-background-color)';
+  } else if (event.categories?.includes('工作')) {
+    return 'var(--event-work-background-color)';
+  } else if (event.categories?.includes('重要')) {
+    return 'var(--event-important-background-color)';
+  } else if (event.categories?.includes('会议')) {
+    return 'var(--event-meeting-background-color)';
+  } else {
+    return 'var(--event-default-background-color)';
+  }
 };
 
 const formatTime = (date: Date): string => {
@@ -261,6 +278,7 @@ const onTimeSlotClick = (time: Date) => {
 }
 
 .time-slot {
+  display: flex;
   flex: 1;
   position: relative;
   cursor: pointer;

@@ -358,7 +358,7 @@ const clearAllEvents = async () => {
 .settings-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 2rem);
+  height: calc(100vh - 56px - 2rem - 40px);
   padding: 20px;
   background-color: var(--background-color);
   color: var(--text-color);

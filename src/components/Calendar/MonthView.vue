@@ -230,7 +230,7 @@ const showMoreEvents = (date: Date) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 56px - 2rem);
+  height: 100%;
 }
 
 .weekdays-header {

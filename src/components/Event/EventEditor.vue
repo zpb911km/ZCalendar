@@ -69,7 +69,7 @@
         <div class="form-group checkbox-group">
           <label>
             <input
-              v-model="formData.allDay"
+              v-model="formData.all_day"
               type="checkbox"
             />
             全天事件
@@ -88,7 +88,7 @@
         
         <div class="form-group">
           <label for="reminder">提醒</label>
-          <select id="reminder" v-model="formData.reminderMinutes">
+          <select id="reminder" v-model="formData.reminder_minutes">
             <option value="0">无提醒</option>
             <option value="5">5分钟前</option>
             <option value="15">15分钟前</option>
@@ -137,14 +137,14 @@ const emit = defineEmits<{
 }>();
 
 // 表单数据
-const formData = reactive({
+const formData = reactive(props.event || {
   title: '',
   description: '',
   start: new Date(),
   end: new Date(Date.now() + 60 * 60 * 1000), // 默认1小时后
-  allDay: false,
+  all_day: false,
   location: '',
-  reminderMinutes: 15,
+  reminder_minutes: 15,
   categories: '',
   status: 'CONFIRMED'
 });
@@ -169,9 +169,9 @@ watch(
       formData.description = newEvent.description || '';
       formData.start = ensureDate(newEvent.start);
       formData.end = ensureDate(newEvent.end);
-      formData.allDay = newEvent.all_day || false;
+      formData.all_day = newEvent.all_day || false;
       formData.location = newEvent.location || '';
-      formData.reminderMinutes = newEvent.reminder_minutes || 15;
+      formData.reminder_minutes = newEvent.reminder_minutes || 15;
       formData.categories = newEvent.categories || '';
       formData.status = newEvent.status || 'CONFIRMED';
     } else {
@@ -188,9 +188,9 @@ const resetForm = () => {
   formData.description = '';
   formData.start = new Date();
   formData.end = new Date(Date.now() + 60 * 60 * 1000);
-  formData.allDay = false;
+  formData.all_day = false;
   formData.location = '';
-  formData.reminderMinutes = 15;
+  formData.reminder_minutes = 15;
   formData.categories = '';
   formData.status = 'CONFIRMED';
 };
@@ -202,8 +202,8 @@ const save = () => {
     description: formData.description,
     start: new Date(formData.start),
     end: new Date(formData.end),
-    all_day: formData.allDay,
-    reminder_minutes: Number(formData.reminderMinutes),
+    all_day: formData.all_day,
+    reminder_minutes: Number(formData.reminder_minutes),
     created_at: props.event?.created_at || new Date(),
     updated_at: new Date(),
     sequence: props.event?.sequence || 0,

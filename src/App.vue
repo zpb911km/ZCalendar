@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app_content">
     <nav class="main-nav">
       <router-link to="/" class="nav-link">日历</router-link>
       <router-link to="/events" class="nav-link">事件</router-link>
@@ -29,7 +29,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-#app {
+#app_content {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -68,5 +68,6 @@ onMounted(() => {
 .main-content {
   /* flex: 1; */
   overflow: hidden;
+  height: calc(100vh - 56px - 2rem);
 }
 </style>
