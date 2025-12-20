@@ -146,22 +146,6 @@ const getEventsForTimeSlot = (_date: Date, time: Date): CalendarEvent[] => {
 };
 
 const getEventStyle = (event: CalendarEvent, _date: Date): Record<string, string> => {
-  const eventStart = ensureDate(event.start);
-  const eventEnd = ensureDate(event.end);
-  
-  // 计算事件在时间槽中的位置和高度
-  const startHour = eventStart.getHours();
-  const startMinute = eventStart.getMinutes();
-  const endHour = eventEnd.getHours();
-  const endMinute = eventEnd.getMinutes();
-  
-  // 计算事件高度（基于持续时间）
-  const durationInHours = (endHour + endMinute / 60) - (startHour + startMinute / 60);
-  const height = Math.max(30, durationInHours * 60); // 最小高度30px，每小时60px
-  
-  // 计算top位置
-  const top = (startHour + startMinute / 60) * 60; // 每小时60px
-  
   return {
     backgroundColor: getEventBackgroundColor(event),
     color: getEventColor(event),

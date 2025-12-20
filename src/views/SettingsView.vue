@@ -43,6 +43,11 @@
         <div class="setting-item">
           <div class="note">
             <p>请在系统设置处开启通知权限。并自定义通知的提醒方式。</p>
+            <!-- Android通知配置说明：
+                1. 通知样式、提示音和悬浮效果通过Android原生通知渠道实现
+                2. 权限配置在AndroidManifest.xml中自动处理
+                3. 高优先级通知可实现悬浮效果
+                4. 提示音和震动通过Android通知渠道配置实现 -->
           </div>
         </div>
       </div>
@@ -79,7 +84,9 @@
         </div>
       </div> -->
 
-      <div class="settings-section">
+      <!-- TODO -->
+      <!-- 日历目前无意义,其他地方也没有用到,有时间再优化 -->
+      <!-- <div class="settings-section">
         <h2>日历管理</h2>
         <div class="calendar-list">
           <div 
@@ -112,6 +119,11 @@
           />
           <button @click="createCalendar" class="btn btn-primary">添加日历</button>
         </div>
+        
+      </div> -->
+
+      <div class="settings-section">
+        <h2>数据管理</h2>
         <div class="setting-item">
           <label>时区设置</label>
           <select v-model="timezoneOffset" @change="updateTimezone" class="timezone-selector">
@@ -142,10 +154,6 @@
             <option value="12">UTC+12</option>
           </select>
         </div>
-      </div>
-
-      <div class="settings-section">
-        <h2>数据管理</h2>
         <div class="setting-item">
           <button @click="exportAllEvents" class="btn btn-secondary">导出所有事件</button>
         </div>
@@ -190,8 +198,8 @@ const buildDate = ref(new Date().toISOString().split('T')[0]);
 
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
-const newCalendarName = ref('');
-const newCalendarColor = ref('#4285F4');
+// const newCalendarName = ref('');
+// const newCalendarColor = ref('#4285F4');
 
 onMounted(() => {
   // 加载保存的设置
@@ -241,57 +249,60 @@ const updateTimezone = () => {
   localStorage.setItem('timezoneOffset', timezoneOffset.value);
 };
 
-const createCalendar = async () => {
-  if (!newCalendarName.value.trim()) {
-    alert('请输入日历名称');
-    return;
-  }
+// const createCalendar = async () => {
+//   if (!newCalendarName.value.trim()) {
+//     alert('请输入日历名称');
+//     return;
+//   }
 
-  try {
-    const newCalendar = await calendarService.createCalendar({
-      name: newCalendarName.value,
-      color: newCalendarColor.value,
-      is_primary: false,
-    });
-    calendars.value.push(newCalendar);
-    newCalendarName.value = '';
-    newCalendarColor.value = '#4285F4';
-  } catch (error) {
-    console.error('创建日历失败:', error);
-    alert('创建日历失败，请重试');
-  }
-};
+//   try {
+//     const newCalendar = await calendarService.createCalendar({
+//       id: '',
+//       name: newCalendarName.value,
+//       color: newCalendarColor.value,
+//       is_primary: false,
+//       created_at: new Date(),
+//       updated_at: new Date()
+//     });
+//     calendars.value.push(newCalendar);
+//     newCalendarName.value = '';
+//     newCalendarColor.value = '#4285F4';
+//   } catch (error) {
+//     console.error('创建日历失败:', error);
+//     alert('创建日历失败，请重试');
+//   }
+// };
 
-const editCalendar = (calendar: Calendar) => {
-  // 这里可以打开一个编辑模态框，但现在简单处理
-  const newName = prompt('请输入新的日历名称', calendar.name);
-  if (newName) {
-    const updatedCalendar = { ...calendar, name: newName };
-    calendarService.updateCalendar(updatedCalendar)
-      .then(result => {
-        const index = calendars.value.findIndex(c => c.id === calendar.id);
-        if (index !== -1) {
-          calendars.value[index] = result;
-        }
-      })
-      .catch(error => {
-        console.error('更新日历失败:', error);
-        alert('更新日历失败，请重试');
-      });
-  }
-};
+// const editCalendar = (calendar: Calendar) => {
+//   // 这里可以打开一个编辑模态框，但现在简单处理
+//   const newName = prompt('请输入新的日历名称', calendar.name);
+//   if (newName) {
+//     const updatedCalendar = { ...calendar, name: newName };
+//     calendarService.updateCalendar(updatedCalendar)
+//       .then(result => {
+//         const index = calendars.value.findIndex(c => c.id === calendar.id);
+//         if (index !== -1) {
+//           calendars.value[index] = result;
+//         }
+//       })
+//       .catch(error => {
+//         console.error('更新日历失败:', error);
+//         alert('更新日历失败，请重试');
+//       });
+//   }
+// };
 
-const deleteCalendar = async (id: string) => {
-  if (confirm('确定要删除这个日历吗？此操作不会删除日历中的事件。')) {
-    try {
-      await calendarService.deleteCalendar(id);
-      calendars.value = calendars.value.filter(cal => cal.id !== id);
-    } catch (error) {
-      console.error('删除日历失败:', error);
-      alert('删除日历失败，请重试');
-    }
-  }
-};
+// const deleteCalendar = async (id: string) => {
+//   if (confirm('确定要删除这个日历吗？此操作不会删除日历中的事件。')) {
+//     try {
+//       await calendarService.deleteCalendar(id);
+//       calendars.value = calendars.value.filter(cal => cal.id !== id);
+//     } catch (error) {
+//       console.error('删除日历失败:', error);
+//       alert('删除日历失败，请重试');
+//     }
+//   }
+// };
 
 const exportAllEvents = async () => {
   try {
@@ -313,6 +324,7 @@ const exportAllEvents = async () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    await invoke('send_notification', {title: "日历已导出", body: "日历导出成功,请查看下载文件夹"});
   } catch (error) {
     console.error('导出事件失败:', error);
     alert('导出事件失败，请重试');
@@ -338,7 +350,7 @@ const importEvents = async () => {
           icalContent: content,
           timezoneOffset: parseInt(timezoneOffsetValue)
         });
-        alert('事件导入成功');
+        await invoke('send_notification', {title: "日历已导入", body: "日历导入成功"});
         // 重新加载日历列表
         loadCalendars();
       } catch (error) {
@@ -418,6 +430,7 @@ const clearAllEvents = async () => {
 
 .theme-selector,
 .reminder-input,
+.timezone-selector,
 .time-input {
   padding: 8px 12px;
   border: 1px solid var(--border-color);

@@ -119,7 +119,8 @@ export function useCalendar(initialDate: Date = new Date()) {
     loading.value = true;
     error.value = null;
     try {
-      const newCalendar = await calendarService.createCalendar({ 
+      const newCalendar = await calendarService.createCalendar({
+        id: '',
         name, 
         color,
         is_primary: false,

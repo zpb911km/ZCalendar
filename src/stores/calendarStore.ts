@@ -44,7 +44,7 @@ export const useCalendarStore = defineStore('calendar', {
       this.loading = true;
       this.error = null;
       try {
-        const newCalendar = await calendarService.createCalendar(calendarData);
+        const newCalendar = await calendarService.createCalendar({...calendarData, id: ''});
         this.calendars.push(newCalendar);
         if (newCalendar.is_primary) {
           this.currentCalendarId = newCalendar.id;

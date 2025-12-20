@@ -1,10 +1,4 @@
-// Android通知配置说明：
-// 1. 通知样式、提示音和悬浮效果通过Android原生通知渠道实现
-// 2. 权限配置在AndroidManifest.xml中自动处理
-// 3. 高优先级通知可实现悬浮效果
-// 4. 提示音和震动通过Android通知渠道配置实现
-
-use chrono::{DateTime, Duration, FixedOffset, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Duration, FixedOffset, NaiveDateTime, Utc};
 use ical::parser::ical::IcalParser;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, SqlitePool};
@@ -36,8 +30,6 @@ struct Event {
     priority: Option<i32>,
     calendar_id: Option<String>,
 }
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 struct Calendar {
@@ -322,8 +314,10 @@ async fn import_ical(
 
             if let (Some(start_str), Some(end_str)) = (start, end) {
                 // 使用带时区偏移的解析函数
-                let start_dt = parse_ical_datetime_with_offset(&start_str, timezone_offset_hours).unwrap_or_else(|_| Utc::now());
-                let end_dt = parse_ical_datetime_with_offset(&end_str, timezone_offset_hours).unwrap_or_else(|_| Utc::now());
+                let start_dt = parse_ical_datetime_with_offset(&start_str, timezone_offset_hours)
+                    .unwrap_or_else(|_| Utc::now());
+                let end_dt = parse_ical_datetime_with_offset(&end_str, timezone_offset_hours)
+                    .unwrap_or_else(|_| Utc::now());
 
                 let create_event_dto = CreateEventDto {
                     title,
@@ -434,7 +428,10 @@ async fn export_ical(
                 format_ical_date(&event.start)
             ));
         } else {
-            ical_content.push_str(&format!("DTSTART:{}\n", format_ical_datetime_with_offset(&event.start, timezone_offset_hours)));
+            ical_content.push_str(&format!(
+                "DTSTART:{}\n",
+                format_ical_datetime_with_offset(&event.start, timezone_offset_hours)
+            ));
         }
 
         // 结束时间
@@ -444,7 +441,10 @@ async fn export_ical(
                 format_ical_date(&event.end)
             ));
         } else {
-            ical_content.push_str(&format!("DTEND:{}\n", format_ical_datetime_with_offset(&event.end, timezone_offset_hours)));
+            ical_content.push_str(&format!(
+                "DTEND:{}\n",
+                format_ical_datetime_with_offset(&event.end, timezone_offset_hours)
+            ));
         }
 
         // 标题
@@ -557,7 +557,6 @@ async fn create_calendar(
         .fetch_one(&*pool)
         .await
         .map_err(|e| e.to_string())?;
-
     Ok(new_calendar)
 }
 
@@ -638,27 +637,6 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>, String> {
         .map_err(|e| e.to_string())
 }
 
-fn parse_ical_datetime(s: &str) -> Result<DateTime<Utc>, String> {
-    // 尝试解析iCalendar日期时间格式
-    if s.len() == 8 {
-        // 日期格式 YYYYMMDD
-        let date = chrono::NaiveDate::parse_from_str(s, "%Y%m%d").map_err(|e| e.to_string())?;
-        let datetime = date.and_hms_opt(0, 0, 0).unwrap();
-        Ok(DateTime::<Utc>::from_naive_utc_and_offset(datetime, Utc))
-    } else if s.len() == 15 {
-        // 日期时间格式 YYYYMMDDTHHMMSS
-        let datetime_str = s.replace("T", "");
-        let datetime = NaiveDateTime::parse_from_str(&datetime_str, "%Y%m%d%H%M%S")
-            .map_err(|e| e.to_string())?;
-        Ok(DateTime::<Utc>::from_naive_utc_and_offset(datetime, Utc))
-    } else {
-        // 尝试解析ISO 8601格式
-        DateTime::parse_from_rfc3339(s)
-            .map(|dt| dt.with_timezone(&Utc))
-            .map_err(|e| e.to_string())
-    }
-}
-
 fn parse_ical_datetime_with_offset(s: &str, offset_hours: i32) -> Result<DateTime<Utc>, String> {
     // 尝试解析iCalendar日期时间格式
     if s.len() == 8 {
@@ -689,14 +667,11 @@ fn parse_ical_datetime_with_offset(s: &str, offset_hours: i32) -> Result<DateTim
 
 fn format_ical_datetime_with_offset(dt: &DateTime<Utc>, offset_hours: i32) -> String {
     // 创建时区偏移
-    let offset = FixedOffset::east_opt(offset_hours * 3600).unwrap_or_else(|| FixedOffset::east_opt(0).unwrap());
+    let offset = FixedOffset::east_opt(offset_hours * 3600)
+        .unwrap_or_else(|| FixedOffset::east_opt(0).unwrap());
     // 将UTC时间转换为指定时区
     let local_time = dt.with_timezone(&offset);
     local_time.format("%Y%m%dT%H%M%S").to_string()
-}
-
-fn format_ical_datetime(dt: &DateTime<Utc>) -> String {
-    dt.format("%Y%m%dT%H%M%S").to_string()
 }
 
 fn format_ical_date(dt: &DateTime<Utc>) -> String {
@@ -721,7 +696,7 @@ async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: Sqli
     //     tauri::async_runtime::spawn(async move {
     //         // 等待一段时间确保所有插件都已加载
     //         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-            
+
     //         // 发送一个初始化通知以确保通知渠道被正确创建
     //         let _ = app_handle_clone
     //             .plugin(tauri_plugin_notification::init());
@@ -733,7 +708,7 @@ async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: Sqli
     //             .show();
     //     });
     // }
-    
+
     spawn(async move {
         loop {
             check_upcoming_events(&app_handle, &pool).await;
@@ -747,7 +722,8 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &Sql
     let now = Utc::now();
     // send_heartbeat_notification(app_handle).await;
     // 查询未来1分钟内需要提醒的事件
-    let query = "SELECT * FROM events WHERE reminder_minutes > 0 AND start > ? AND status != 'CANCELLED'";
+    let query =
+        "SELECT * FROM events WHERE reminder_minutes > 0 AND start > ? AND status != 'CANCELLED'";
     let upcoming_events: Vec<Event> = sqlx::query_as::<_, Event>(query)
         .bind(&now.to_rfc3339())
         .fetch_all(pool)
@@ -760,7 +736,7 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &Sql
         let time_diff = event.start - now - Duration::minutes(reminder_minutes as i64);
         let mut minutes_diff = time_diff.num_minutes();
         if minutes_diff < 0 {
-            minutes_diff = -minutes_diff;  // abs
+            minutes_diff = -minutes_diff; // abs
         }
 
         // 如果当前时间正好是提醒时间
@@ -770,16 +746,6 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &Sql
         // println!("minutes_diff: {}", minutes_diff);
         // send_reminder_notification(app_handle, &event).await;
     }
-}
-
-async fn send_heartbeat_notification<R: Runtime>(app_handle: &AppHandle<R>) {
-    let _ = app_handle.plugin(tauri_plugin_notification::init());
-    let _ = app_handle
-        .notification()
-        .builder()
-        .title("Heartbeat")
-        .body(Utc::now().to_rfc3339())
-        .show();
 }
 
 async fn send_reminder_notification<R: Runtime>(app_handle: &AppHandle<R>, event: &Event) {
@@ -794,7 +760,7 @@ async fn send_reminder_notification<R: Runtime>(app_handle: &AppHandle<R>, event
     };
 
     let _ = app_handle.plugin(tauri_plugin_notification::init());
-    
+
     // 构建通知
     let notification = app_handle
         .notification()
@@ -805,20 +771,21 @@ async fn send_reminder_notification<R: Runtime>(app_handle: &AppHandle<R>, event
     let _ = notification.show();
 }
 
-// 测试通知函数
+// 发送Android通知的函数
 #[tauri::command]
-async fn test_notification<R: Runtime>(
-    app_handle: AppHandle<R>
+async fn send_notification<R: Runtime>(
+    app_handle: AppHandle<R>,
+    title: String,
+    body: String,
 ) -> Result<String, String> {
     let _ = app_handle.plugin(tauri_plugin_notification::init());
     let _ = app_handle
         .notification()
         .builder()
-        .title("测试通知")
-        .body("这是一条测试通知，应该有提示音和悬浮效果")
+        .title(&title)
+        .body(&body)
         .show();
-
-    Ok("测试通知已发送".to_string())
+    Ok("通知已发送".to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -882,23 +849,22 @@ pub fn run() {
             {
                 use tauri_plugin_notification::init;
                 let notification_plugin = init();
-                
+
                 // 配置Android通知渠道
                 #[cfg(target_os = "android")]
                 {
                     // 初始化通知插件
                     let _ = app.handle().plugin(notification_plugin);
-                    
+
                     // 等待应用完全初始化后创建通知渠道
                     let app_handle = app.handle().clone();
                     tauri::async_runtime::spawn(async move {
                         // 等待一点时间确保插件完全加载
                         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-                        
+
                         // 由于当前Tauri版本可能不直接支持创建通知渠道，
                         // 我们通过发送一个通知来触发必要的权限和配置
-                        let _ = app_handle
-                            .plugin(tauri_plugin_notification::init());
+                        let _ = app_handle.plugin(tauri_plugin_notification::init());
                         let _ = app_handle
                             .notification()
                             .builder()
@@ -934,7 +900,7 @@ pub fn run() {
             update_calendar,
             delete_calendar,
             get_calendar_events,
-            test_notification
+            send_notification
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

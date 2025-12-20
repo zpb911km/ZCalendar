@@ -80,7 +80,6 @@ import EventCard from '@/components/Event/EventCard.vue';
 import EventEditor from '@/components/Event/EventEditor.vue';
 import EventDetail from '@/components/Event/EventDetail.vue';
 import { CalendarEvent } from '@/types/event';
-import { invoke } from '@tauri-apps/api/core';
 
 const eventStore = useEventStore();
 
@@ -282,26 +281,6 @@ const searchEvents = async () => {
   } else {
     // 如果没有搜索查询，则获取所有事件
     await eventStore.fetchAllEvents();
-  }
-};
-
-const exportCalendar = async () => {
-  try {
-    // 调用后端导出功能
-    const icalContent: string = await invoke('export_ical', { eventIds: null });
-    
-    // 创建并下载文件
-    const blob = new Blob([icalContent as BlobPart], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'calendar.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('导出日历失败:', error);
   }
 };
 </script>

@@ -78,14 +78,7 @@ const emit = defineEmits<{
   (e: 'dateClick', date: Date): void;
 }>();
 
-// 计算属性
-const dayOfWeek = computed(() => dateUtils.getWeekdayName(props.currentDate));
 
-const dateNumber = computed(() => props.currentDate.getDate());
-
-const fullDate = computed(() => {
-  return dateUtils.formatLocal(props.currentDate, 'yyyy年MM月dd日');
-});
 
 const timeSlots = computed(() => {
   const slots = [];
@@ -121,22 +114,6 @@ const getEventsForTimeSlot = (time: Date): CalendarEvent[] => {
 };
 
 const getEventStyle = (event: CalendarEvent): Record<string, string> => {
-  const eventStart = ensureDate(event.start);
-  const eventEnd = ensureDate(event.end);
-  
-  // 计算事件在时间槽中的位置和高度
-  const startHour = eventStart.getHours();
-  const startMinute = eventStart.getMinutes();
-  const endHour = eventEnd.getHours();
-  const endMinute = eventEnd.getMinutes();
-  
-  // 计算事件高度（基于持续时间）
-  const durationInHours = (endHour + endMinute / 60) - (startHour + startMinute / 60);
-  const height = Math.max(30, durationInHours * 60); // 最小高度30px，每小时60px
-  
-  // 计算top位置
-  const top = (startHour + startMinute / 60) * 60; // 每小时60px
-  
   return {
     // top: `${top}px`,
     // height: `${height}px`,
