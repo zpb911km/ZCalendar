@@ -4,7 +4,7 @@
 // 3. 高优先级通知可实现悬浮效果
 // 4. 提示音和震动通过Android通知渠道配置实现
 
-use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, FixedOffset, NaiveDateTime, TimeZone, Utc};
 use ical::parser::ical::IcalParser;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, SqlitePool};
@@ -247,6 +247,16 @@ async fn delete_event(pool: tauri::State<'_, SqlitePool>, id: i32) -> Result<(),
 }
 
 #[tauri::command]
+async fn delete_all_events(pool: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    sqlx::query("DELETE FROM events")
+        .execute(&*pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn get_events_in_range(
     pool: tauri::State<'_, SqlitePool>,
     start: String,
@@ -267,9 +277,11 @@ async fn get_events_in_range(
 async fn import_ical(
     pool: tauri::State<'_, SqlitePool>,
     ical_content: String,
+    timezone_offset: Option<i32>,
 ) -> Result<Vec<Event>, String> {
     let parser = IcalParser::new(ical_content.as_bytes());
     let mut events = Vec::new();
+    let timezone_offset_hours = timezone_offset.unwrap_or(0);
 
     for calendar_result in parser {
         let calendar = calendar_result.map_err(|e| format!("Failed to parse calendar: {:?}", e))?;
@@ -309,8 +321,9 @@ async fn import_ical(
             }
 
             if let (Some(start_str), Some(end_str)) = (start, end) {
-                let start_dt = parse_ical_datetime(&start_str).unwrap_or_else(|_| Utc::now());
-                let end_dt = parse_ical_datetime(&end_str).unwrap_or_else(|_| Utc::now());
+                // 使用带时区偏移的解析函数
+                let start_dt = parse_ical_datetime_with_offset(&start_str, timezone_offset_hours).unwrap_or_else(|_| Utc::now());
+                let end_dt = parse_ical_datetime_with_offset(&end_str, timezone_offset_hours).unwrap_or_else(|_| Utc::now());
 
                 let create_event_dto = CreateEventDto {
                     title,
@@ -341,6 +354,7 @@ async fn import_ical(
 async fn export_ical(
     pool: tauri::State<'_, SqlitePool>,
     event_ids: Option<Vec<i32>>,
+    timezone_offset: Option<i32>,
 ) -> Result<String, String> {
     let events = if let Some(ids) = event_ids {
         // 导出指定ID的事件
@@ -397,6 +411,9 @@ async fn export_ical(
     // 构建iCalendar格式
     let mut ical_content = String::from("BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//ZCalendar//EN\n");
 
+    // 获取时区偏移，如果没有提供则默认为0（UTC）
+    let timezone_offset_hours = timezone_offset.unwrap_or(0);
+
     for event in events {
         ical_content.push_str("BEGIN:VEVENT\n");
 
@@ -407,7 +424,7 @@ async fn export_ical(
         // 创建时间
         ical_content.push_str(&format!(
             "DTSTAMP:{}\n",
-            format_ical_datetime(&event.created_at)
+            format_ical_datetime_with_offset(&event.created_at, timezone_offset_hours)
         ));
 
         // 开始时间
@@ -417,7 +434,7 @@ async fn export_ical(
                 format_ical_date(&event.start)
             ));
         } else {
-            ical_content.push_str(&format!("DTSTART:{}\n", format_ical_datetime(&event.start)));
+            ical_content.push_str(&format!("DTSTART:{}\n", format_ical_datetime_with_offset(&event.start, timezone_offset_hours)));
         }
 
         // 结束时间
@@ -427,7 +444,7 @@ async fn export_ical(
                 format_ical_date(&event.end)
             ));
         } else {
-            ical_content.push_str(&format!("DTEND:{}\n", format_ical_datetime(&event.end)));
+            ical_content.push_str(&format!("DTEND:{}\n", format_ical_datetime_with_offset(&event.end, timezone_offset_hours)));
         }
 
         // 标题
@@ -628,7 +645,7 @@ fn parse_ical_datetime(s: &str) -> Result<DateTime<Utc>, String> {
         let date = chrono::NaiveDate::parse_from_str(s, "%Y%m%d").map_err(|e| e.to_string())?;
         let datetime = date.and_hms_opt(0, 0, 0).unwrap();
         Ok(DateTime::<Utc>::from_naive_utc_and_offset(datetime, Utc))
-    } else if s.len() == 16 {
+    } else if s.len() == 15 {
         // 日期时间格式 YYYYMMDDTHHMMSS
         let datetime_str = s.replace("T", "");
         let datetime = NaiveDateTime::parse_from_str(&datetime_str, "%Y%m%d%H%M%S")
@@ -640,6 +657,42 @@ fn parse_ical_datetime(s: &str) -> Result<DateTime<Utc>, String> {
             .map(|dt| dt.with_timezone(&Utc))
             .map_err(|e| e.to_string())
     }
+}
+
+fn parse_ical_datetime_with_offset(s: &str, offset_hours: i32) -> Result<DateTime<Utc>, String> {
+    // 尝试解析iCalendar日期时间格式
+    if s.len() == 8 {
+        // 日期格式 YYYYMMDD
+        let date = chrono::NaiveDate::parse_from_str(s, "%Y%m%d").map_err(|e| e.to_string())?;
+        let datetime = date.and_hms_opt(0, 0, 0).unwrap();
+        Ok(DateTime::<Utc>::from_naive_utc_and_offset(datetime, Utc))
+    } else if s.len() == 15 {
+        // 日期时间格式 YYYYMMDDTHHMMSS
+        let datetime_str = s.replace("T", "");
+        let naive_datetime = NaiveDateTime::parse_from_str(&datetime_str, "%Y%m%d%H%M%S")
+            .map_err(|e| e.to_string())?;
+        // 将解析的时间视为本地时间，然后将其转换为UTC
+        // 为将本地时间转换为UTC，需要减去时区偏移
+        let offset_seconds = offset_hours * 3600;
+        let dt_utc = DateTime::<Utc>::from_naive_utc_and_offset(naive_datetime, Utc)
+            - chrono::Duration::seconds(offset_seconds as i64);
+        Ok(dt_utc)
+    } else {
+        // 尝试解析ISO 8601格式
+        let dt = DateTime::parse_from_rfc3339(s).map_err(|e| e.to_string())?;
+        // 为将本地时间转换为UTC，需要减去时区偏移
+        let offset_seconds = offset_hours * 3600;
+        let dt_utc = dt.with_timezone(&Utc) - chrono::Duration::seconds(offset_seconds as i64);
+        Ok(dt_utc)
+    }
+}
+
+fn format_ical_datetime_with_offset(dt: &DateTime<Utc>, offset_hours: i32) -> String {
+    // 创建时区偏移
+    let offset = FixedOffset::east_opt(offset_hours * 3600).unwrap_or_else(|| FixedOffset::east_opt(0).unwrap());
+    // 将UTC时间转换为指定时区
+    let local_time = dt.with_timezone(&offset);
+    local_time.format("%Y%m%dT%H%M%S").to_string()
 }
 
 fn format_ical_datetime(dt: &DateTime<Utc>) -> String {
@@ -869,6 +922,7 @@ pub fn run() {
             create_event,
             update_event,
             delete_event,
+            delete_all_events,
             get_events_in_range,
             import_ical,
             export_ical,

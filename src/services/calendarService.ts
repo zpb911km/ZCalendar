@@ -26,7 +26,7 @@ export const calendarService = {
   },
 
   // 创建日历
-  async createCalendar(calendar: Omit<Calendar, 'id' | 'createdAt' | 'updatedAt'>): Promise<Calendar> {
+  async createCalendar(calendar: Omit<Calendar, 'id' | 'created_at' | 'updated_at'>): Promise<Calendar> {
     // 确保isPrimary有默认值
     const calendarWithDefaults = {
       ...calendar,

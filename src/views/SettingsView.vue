@@ -24,20 +24,11 @@
             class="color-picker"
           />
         </div>
+        
       </div>
 
       <div class="settings-section">
         <h2>通知设置</h2>
-        <div class="setting-item">
-          <label class="checkbox-label">
-            <input 
-              v-model="notificationsEnabled" 
-              type="checkbox" 
-              @change="toggleNotifications"
-            />
-            启用事件提醒
-          </label>
-        </div>
         <div class="setting-item">
           <label>默认提醒时间（分钟）</label>
           <input 
@@ -49,9 +40,14 @@
             class="reminder-input"
           />
         </div>
+        <div class="setting-item">
+          <div class="note">
+            <p>请在系统设置处开启通知权限。并自定义通知的提醒方式。</p>
+          </div>
+        </div>
       </div>
 
-      <div class="settings-section">
+      <!-- <div class="settings-section">
         <h2>日历设置</h2>
         <div class="setting-item">
           <label class="checkbox-label">
@@ -81,7 +77,7 @@
             class="time-input"
           />
         </div>
-      </div>
+      </div> -->
 
       <div class="settings-section">
         <h2>日历管理</h2>
@@ -115,6 +111,36 @@
             class="color-picker"
           />
           <button @click="createCalendar" class="btn btn-primary">添加日历</button>
+        </div>
+        <div class="setting-item">
+          <label>时区设置</label>
+          <select v-model="timezoneOffset" @change="updateTimezone" class="timezone-selector">
+            <option value="-12">UTC-12</option>
+            <option value="-11">UTC-11</option>
+            <option value="-10">UTC-10</option>
+            <option value="-9">UTC-9</option>
+            <option value="-8">UTC-8</option>
+            <option value="-7">UTC-7</option>
+            <option value="-6">UTC-6</option>
+            <option value="-5">UTC-5</option>
+            <option value="-4">UTC-4</option>
+            <option value="-3">UTC-3</option>
+            <option value="-2">UTC-2</option>
+            <option value="-1">UTC-1</option>
+            <option value="0">UTC+0</option>
+            <option value="1">UTC+1</option>
+            <option value="2">UTC+2</option>
+            <option value="3">UTC+3</option>
+            <option value="4">UTC+4</option>
+            <option value="5">UTC+5</option>
+            <option value="6">UTC+6</option>
+            <option value="7">UTC+7</option>
+            <option value="8" selected>UTC+8</option>
+            <option value="9">UTC+9</option>
+            <option value="10">UTC+10</option>
+            <option value="11">UTC+11</option>
+            <option value="12">UTC+12</option>
+          </select>
         </div>
       </div>
 
@@ -155,11 +181,11 @@ import { themeManager } from '@/utils/themeManager';
 // 设置状态
 const theme = ref('auto');
 const primaryColor = ref('#007bff');
-const notificationsEnabled = ref(true);
 const defaultReminderMinutes = ref(15);
 const showWeekNumbers = ref(false);
 const workdayStart = ref('09:00');
 const workdayEnd = ref('18:00');
+const timezoneOffset = ref('8'); // 默认UTC+8
 const buildDate = ref(new Date().toISOString().split('T')[0]);
 
 // 日历管理状态
@@ -176,19 +202,19 @@ onMounted(() => {
 
 const loadSettings = () => {
   const settings = themeManager.getSettings();
-  const savedNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
   const savedDefaultReminder = parseInt(localStorage.getItem('defaultReminderMinutes') || '15');
   const savedShowWeekNumbers = localStorage.getItem('showWeekNumbers') === 'true';
   const savedWorkdayStart = localStorage.getItem('workdayStart') || '09:00';
   const savedWorkdayEnd = localStorage.getItem('workdayEnd') || '18:00';
+  const savedTimezoneOffset = localStorage.getItem('timezoneOffset') || '8';
 
   theme.value = settings.theme;
   primaryColor.value = settings.primaryColor;
-  notificationsEnabled.value = savedNotificationsEnabled;
   defaultReminderMinutes.value = savedDefaultReminder;
   showWeekNumbers.value = savedShowWeekNumbers;
   workdayStart.value = savedWorkdayStart;
   workdayEnd.value = savedWorkdayEnd;
+  timezoneOffset.value = savedTimezoneOffset;
 };
 
 const loadCalendars = async () => {
@@ -203,41 +229,16 @@ const changeTheme = () => {
   themeManager.setTheme(theme.value as 'light' | 'dark' | 'auto');
 };
 
-// const applyTheme = (selectedTheme: string) => {
-//   // 根据选择的主题设置CSS类，CSS文件中已经定义了完整的主题
-//   const root = document.documentElement;
-  
-//   if (selectedTheme === 'dark' || 
-//       (selectedTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-//     root.setAttribute('data-theme', 'dark');
-//   } else {
-//     root.setAttribute('data-theme', 'light');
-//   }
-// };
-
 const changePrimaryColor = () => {
   themeManager.setPrimaryColor(primaryColor.value);
-};
-
-
-const toggleNotifications = () => {
-  localStorage.setItem('notificationsEnabled', notificationsEnabled.value.toString());
 };
 
 const updateDefaultReminder = () => {
   localStorage.setItem('defaultReminderMinutes', defaultReminderMinutes.value.toString());
 };
 
-const toggleWeekNumbers = () => {
-  localStorage.setItem('showWeekNumbers', showWeekNumbers.value.toString());
-};
-
-const updateWorkdayStart = () => {
-  localStorage.setItem('workdayStart', workdayStart.value);
-};
-
-const updateWorkdayEnd = () => {
-  localStorage.setItem('workdayEnd', workdayEnd.value);
+const updateTimezone = () => {
+  localStorage.setItem('timezoneOffset', timezoneOffset.value);
 };
 
 const createCalendar = async () => {
@@ -251,8 +252,6 @@ const createCalendar = async () => {
       name: newCalendarName.value,
       color: newCalendarColor.value,
       is_primary: false,
-      created_at: new Date(),
-      updated_at: new Date(),
     });
     calendars.value.push(newCalendar);
     newCalendarName.value = '';
@@ -296,8 +295,13 @@ const deleteCalendar = async (id: string) => {
 
 const exportAllEvents = async () => {
   try {
-    // 调用后端导出功能
-    const icalContent: string = await invoke('export_ical', { eventIds: null });
+    // 获取当前时区设置
+    const timezoneOffsetValue = localStorage.getItem('timezoneOffset') || '8';
+    // 调用后端导出功能，传递时区信息
+    const icalContent: string = await invoke('export_ical', { 
+      eventIds: null,
+      timezoneOffset: parseInt(timezoneOffsetValue)
+    });
     
     // 创建并下载文件
     const blob = new Blob([icalContent as BlobPart], { type: 'text/calendar' });
@@ -325,8 +329,15 @@ const importEvents = async () => {
     if (file) {
       try {
         const content = await file.text();
-        // 调用后端导入功能
-        await invoke('import_ical', { icalContent: content });
+        // 获取当前时区设置并传递给后端导入功能
+        const timezoneOffsetValue = localStorage.getItem('timezoneOffset') || '8';
+        console.log(content);
+        console.log(timezoneOffsetValue);
+        // return;
+        await invoke('import_ical', { 
+          icalContent: content,
+          timezoneOffset: parseInt(timezoneOffsetValue)
+        });
         alert('事件导入成功');
         // 重新加载日历列表
         loadCalendars();
@@ -342,9 +353,7 @@ const importEvents = async () => {
 const clearAllEvents = async () => {
   if (confirm('确定要清空所有事件吗？此操作不可撤销。')) {
     try {
-      // 获取所有事件ID并删除
-      // 这里需要调用后端的获取所有事件接口，然后逐个删除
-      // 或者创建一个批量删除的后端接口
+      invoke('delete_all_events');
       alert('所有事件已清空');
     } catch (error) {
       console.error('清空事件失败:', error);
@@ -520,5 +529,13 @@ const clearAllEvents = async () => {
 
 .about-info p {
   margin: 5px 0;
+}
+
+.note{
+  color: var(--text-color);
+  background-color: var(--warning-color);
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 </style>
