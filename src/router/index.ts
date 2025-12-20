@@ -7,23 +7,23 @@ const routes = [
   {
     path: '/',
     name: 'Calendar',
-    component: CalendarView
+    component: CalendarView,
   },
   {
     path: '/events',
     name: 'Events',
-    component: EventView
+    component: EventView,
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: SettingsView
-  }
+    component: SettingsView,
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 });
 
 export default router;

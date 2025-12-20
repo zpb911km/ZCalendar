@@ -25,7 +25,7 @@ export function useCalendar(initialDate: Date = new Date()) {
   const viewTypes = ref<CalendarViewType[]>([
     { value: 'month', label: '月' },
     { value: 'week', label: '周' },
-    { value: 'day', label: '日' }
+    { value: 'day', label: '日' },
   ]);
 
   // 当前视图的标题
@@ -97,7 +97,7 @@ export function useCalendar(initialDate: Date = new Date()) {
     error.value = null;
     try {
       calendars.value = await calendarService.getAllCalendars();
-      
+
       // 设置默认日历
       if (calendars.value.length > 0 && !currentCalendar.value) {
         const primaryCal = calendars.value.find(cal => cal.is_primary);
@@ -121,19 +121,19 @@ export function useCalendar(initialDate: Date = new Date()) {
     try {
       const newCalendar = await calendarService.createCalendar({
         id: '',
-        name, 
+        name,
         color,
         is_primary: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       });
       calendars.value.push(newCalendar);
-      
+
       // 如果这是第一个日历，选择它
       if (calendars.value.length === 1) {
         currentCalendar.value = newCalendar;
       }
-      
+
       return newCalendar;
     } catch (err) {
       error.value = err instanceof Error ? err.message : '创建日历失败';
@@ -152,7 +152,7 @@ export function useCalendar(initialDate: Date = new Date()) {
       const index = calendars.value.findIndex(cal => cal.id === calendar.id);
       if (index !== -1) {
         calendars.value[index] = updatedCalendar;
-        
+
         // 如果更新的是当前选中的日历，也更新当前日历
         if (currentCalendar.value?.id === calendar.id) {
           currentCalendar.value = updatedCalendar;
@@ -174,10 +174,11 @@ export function useCalendar(initialDate: Date = new Date()) {
     try {
       await calendarService.deleteCalendar(id);
       calendars.value = calendars.value.filter(cal => cal.id !== id);
-      
+
       // 如果删除的是当前选中的日历，选择第一个日历
       if (currentCalendar.value?.id === id) {
-        currentCalendar.value = calendars.value.length > 0 ? calendars.value[0] : null;
+        currentCalendar.value =
+          calendars.value.length > 0 ? calendars.value[0] : null;
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : '删除日历失败';
@@ -210,6 +211,6 @@ export function useCalendar(initialDate: Date = new Date()) {
     selectCalendar,
     createCalendar,
     updateCalendar,
-    deleteCalendar
+    deleteCalendar,
   };
 }

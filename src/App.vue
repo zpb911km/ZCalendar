@@ -5,11 +5,10 @@
       <router-link to="/events" class="nav-link">事件</router-link>
       <router-link to="/settings" class="nav-link">设置</router-link>
     </nav>
-    
+
     <main class="main-content">
       <router-view />
     </main>
-  
   </div>
 </template>
 
@@ -18,11 +17,10 @@ import { onMounted } from 'vue';
 import { themeManager } from './utils/themeManager';
 // import { useRouter } from 'vue-router'; // 未使用的router变量
 
-
 onMounted(() => {
   // 初始化应用
   console.log('ZCalendar应用已启动');
-  
+
   // 确保主题已加载
   themeManager.loadSettings();
 });
@@ -62,8 +60,6 @@ onMounted(() => {
   color: var(--primary-color);
   /* background-color: var(--secondary-light); */
 }
-
-
 
 .main-content {
   /* flex: 1; */

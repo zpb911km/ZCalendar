@@ -3,7 +3,9 @@
     <header class="event-header">
       <h1 class="event-title">事件管理</h1>
       <div class="event-actions">
-        <button @click="openEventEditor()" class="btn btn-primary">添加事件</button>
+        <button @click="openEventEditor()" class="btn btn-primary">
+          添加事件
+        </button>
         <button @click="searchEvents" class="btn btn-secondary">搜索</button>
         <!-- <button @click="exportCalendar" class="btn btn-secondary">导出日历</button> -->
       </div>
@@ -13,7 +15,11 @@
       <div class="event-filters">
         <select v-model="filterCategory" class="category-filter">
           <option value="">所有分类</option>
-          <option v-for="category in categories" :key="category" :value="category">
+          <option
+            v-for="category in categories"
+            :key="category"
+            :value="category"
+          >
             {{ category }}
           </option>
         </select>
@@ -24,19 +30,19 @@
           <option value="thisWeek">本周</option>
           <option value="thisMonth">本月</option>
         </select>
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="搜索事件..." 
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索事件..."
           class="search-input"
           @keyup.enter="searchEvents"
         />
       </div>
 
       <div class="event-list">
-        <event-card 
-          v-for="event in filteredEvents" 
-          :key="event.id" 
+        <event-card
+          v-for="event in filteredEvents"
+          :key="event.id"
           :event="event"
           @click="openEventDetail(event)"
           @edit="editEvent"
@@ -51,7 +57,7 @@
     <!-- 事件编辑器模态框 -->
     <div v-if="showEventEditor" class="modal-overlay" @click="closeEventEditor">
       <div class="modal-content" @click.stop>
-        <event-editor 
+        <event-editor
           :event="editingEvent"
           @save="saveEvent"
           @cancel="closeEventEditor"
@@ -62,7 +68,7 @@
     <!-- 事件详情模态框 -->
     <div v-if="showEventDetail" class="modal-overlay" @click="closeEventDetail">
       <div class="modal-content" @click.stop>
-        <event-detail 
+        <event-detail
           :event="selectedEvent"
           @edit="editEvent(selectedEvent)"
           @delete="deleteEvent(selectedEvent.id)"
@@ -96,7 +102,7 @@ const editingEvent = ref<CalendarEvent>({
   created_at: new Date(),
   updated_at: new Date(),
   sequence: 0,
-  status: 'CONFIRMED'
+  status: 'CONFIRMED',
 });
 const selectedEvent = ref<CalendarEvent>({
   id: 0,
@@ -109,7 +115,7 @@ const selectedEvent = ref<CalendarEvent>({
   created_at: new Date(),
   updated_at: new Date(),
   sequence: 0,
-  status: 'CONFIRMED'
+  status: 'CONFIRMED',
 });
 const searchQuery = ref('');
 const filterCategory = ref('');
@@ -140,18 +146,24 @@ const filteredEvents = computed(() => {
   // 搜索过滤
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(event => 
-      event.title.toLowerCase().includes(query) ||
-      (event.description && event.description.toLowerCase().includes(query)) ||
-      (event.location && event.location.toLowerCase().includes(query))
+    result = result.filter(
+      event =>
+        event.title.toLowerCase().includes(query) ||
+        (event.description &&
+          event.description.toLowerCase().includes(query)) ||
+        (event.location && event.location.toLowerCase().includes(query))
     );
   }
 
   // 分类过滤
   if (filterCategory.value) {
-    result = result.filter(event => 
-      event.categories && 
-      event.categories.split(',').map(cat => cat.trim()).includes(filterCategory.value)
+    result = result.filter(
+      event =>
+        event.categories &&
+        event.categories
+          .split(',')
+          .map(cat => cat.trim())
+          .includes(filterCategory.value)
     );
   }
 
@@ -161,7 +173,11 @@ const filteredEvents = computed(() => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    const startOfWeek = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - now.getDay()
+    );
     const endOfWeek = new Date();
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -185,7 +201,9 @@ const filteredEvents = computed(() => {
   }
 
   // 按开始时间排序
-  result.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  result.sort(
+    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+  );
 
   return result;
 });
@@ -202,7 +220,7 @@ const openEventEditor = (event?: CalendarEvent) => {
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
-    status: 'CONFIRMED'
+    status: 'CONFIRMED',
   };
   showEventEditor.value = true;
 };
@@ -220,7 +238,7 @@ const closeEventEditor = () => {
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
-    status: 'CONFIRMED'
+    status: 'CONFIRMED',
   };
 };
 

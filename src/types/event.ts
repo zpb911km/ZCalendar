@@ -2,7 +2,7 @@ export interface CalendarEvent {
   id: number;
   title: string;
   description?: string;
-  start: string | Date;  // 后端返回字符串，前端处理为Date
+  start: string | Date; // 后端返回字符串，前端处理为Date
   end: string | Date;
   all_day: boolean;
   reminder_minutes: number;

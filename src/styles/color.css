@@ -1,34 +1,35 @@
 /* 全局颜色变量 - 浅色主题 */
-:root, [data-theme="light"] {
+:root,
+[data-theme='light'] {
   /* 主色调 */
   --primary-color: #007bff;
   --primary-dark: #0056b3;
   --primary-light: #80bdff;
-  
+
   /* 背景色 */
   --background-color: #ffffff;
   --modal-background-color: #ffffff;
-  
+
   /* 文字颜色 */
   --text-color: #212529;
   --text-secondary-color: #6c757d;
   --text-light-color: #f8f9fa;
-  
+
   /* 边框颜色 */
   --border-color: #dee2e6;
-  
+
   /* 状态颜色 */
   --success-color: #28a745;
   --warning-color: #ffc107;
   --danger-color: #dc3545;
   --info-color: #17a2b8;
-  
+
   /* 背景色变体 */
   --secondary-color: #cfd9e2;
   --secondary-light: #e9ecef;
   --input-background-color: #f8f9fa;
   --card-background-color: #ffffff;
-  
+
   /* 日历特定颜色 */
   --today-highlight: #e3f2fd;
   --weekend-color: #f8f9fa;
@@ -113,7 +114,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 输入框样式 */
@@ -128,7 +129,9 @@
   background-clip: padding-box;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .form-control:focus {
@@ -136,7 +139,7 @@
   background-color: var(--input-background-color);
   border-color: var(--primary-light);
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 /* 通用样式 */

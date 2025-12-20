@@ -13,7 +13,7 @@ export const useEventStore = defineStore('event', {
 
   getters: {
     // 按日期分组的事件
-    eventsByDate: (state) => {
+    eventsByDate: state => {
       const grouped = new Map<string, CalendarEvent[]>();
       state.events.forEach(event => {
         const dateKey = new Date(event.start).toDateString();
@@ -24,32 +24,34 @@ export const useEventStore = defineStore('event', {
       });
       return grouped;
     },
-    
+
     // 未来的事件
-    upcomingEvents: (state) => {
+    upcomingEvents: state => {
       const now = new Date();
       return state.events
         .filter(event => new Date(event.start) > now)
-        .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+        .sort(
+          (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+        );
     },
-    
+
     // 今天的事件
-    todayEvents: (state) => {
+    todayEvents: state => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      
+
       return state.events.filter(event => {
         const eventStart = new Date(event.start);
         return eventStart >= today && eventStart < tomorrow;
       });
     },
-    
+
     // 根据ID获取事件
-    getEventById: (state) => {
+    getEventById: state => {
       return (id: number) => state.events.find(event => event.id === id);
-    }
+    },
   },
 
   actions: {
@@ -72,7 +74,8 @@ export const useEventStore = defineStore('event', {
       try {
         this.events = await eventService.getEventsByDate(date);
       } catch (error) {
-        this.error = error instanceof Error ? error.message : '获取日期事件失败';
+        this.error =
+          error instanceof Error ? error.message : '获取日期事件失败';
         console.error('获取日期事件失败:', error);
       } finally {
         this.loading = false;
@@ -130,7 +133,7 @@ export const useEventStore = defineStore('event', {
         this.loading = false;
       }
     },
-    
+
     async searchEvents(query: string) {
       this.loading = true;
       this.error = null;
@@ -145,6 +148,6 @@ export const useEventStore = defineStore('event', {
       } finally {
         this.loading = false;
       }
-    }
+    },
   },
 });

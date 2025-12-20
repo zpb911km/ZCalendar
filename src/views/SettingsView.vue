@@ -17,24 +17,23 @@
         </div>
         <div class="setting-item">
           <label>主色调</label>
-          <input 
-            v-model="primaryColor" 
-            type="color" 
-            @change="changePrimaryColor" 
+          <input
+            v-model="primaryColor"
+            type="color"
+            @change="changePrimaryColor"
             class="color-picker"
           />
         </div>
-        
       </div>
 
       <div class="settings-section">
         <h2>通知设置</h2>
         <div class="setting-item">
           <label>默认提醒时间（分钟）</label>
-          <input 
-            v-model.number="defaultReminderMinutes" 
-            type="number" 
-            min="0" 
+          <input
+            v-model.number="defaultReminderMinutes"
+            type="number"
+            min="0"
             max="1440"
             @change="updateDefaultReminder"
             class="reminder-input"
@@ -126,7 +125,11 @@
         <h2>数据管理</h2>
         <div class="setting-item">
           <label>时区设置</label>
-          <select v-model="timezoneOffset" @change="updateTimezone" class="timezone-selector">
+          <select
+            v-model="timezoneOffset"
+            @change="updateTimezone"
+            class="timezone-selector"
+          >
             <option value="-12">UTC-12</option>
             <option value="-11">UTC-11</option>
             <option value="-10">UTC-10</option>
@@ -155,17 +158,21 @@
           </select>
         </div>
         <div class="setting-item">
-          <button @click="exportAllEvents" class="btn btn-secondary">导出所有事件</button>
+          <button @click="exportAllEvents" class="btn btn-secondary">
+            导出所有事件
+          </button>
         </div>
         <div class="setting-item">
-          <button @click="importEvents" class="btn btn-secondary">导入事件</button>
+          <button @click="importEvents" class="btn btn-secondary">
+            导入事件
+          </button>
         </div>
         <div class="setting-item">
-          <button @click="clearAllEvents" class="btn btn-danger">清空所有事件</button>
+          <button @click="clearAllEvents" class="btn btn-danger">
+            清空所有事件
+          </button>
         </div>
       </div>
-
-
 
       <div class="settings-section">
         <h2>关于</h2>
@@ -210,8 +217,11 @@ onMounted(() => {
 
 const loadSettings = () => {
   const settings = themeManager.getSettings();
-  const savedDefaultReminder = parseInt(localStorage.getItem('defaultReminderMinutes') || '15');
-  const savedShowWeekNumbers = localStorage.getItem('showWeekNumbers') === 'true';
+  const savedDefaultReminder = parseInt(
+    localStorage.getItem('defaultReminderMinutes') || '15'
+  );
+  const savedShowWeekNumbers =
+    localStorage.getItem('showWeekNumbers') === 'true';
   const savedWorkdayStart = localStorage.getItem('workdayStart') || '09:00';
   const savedWorkdayEnd = localStorage.getItem('workdayEnd') || '18:00';
   const savedTimezoneOffset = localStorage.getItem('timezoneOffset') || '8';
@@ -242,7 +252,10 @@ const changePrimaryColor = () => {
 };
 
 const updateDefaultReminder = () => {
-  localStorage.setItem('defaultReminderMinutes', defaultReminderMinutes.value.toString());
+  localStorage.setItem(
+    'defaultReminderMinutes',
+    defaultReminderMinutes.value.toString()
+  );
 };
 
 const updateTimezone = () => {
@@ -309,11 +322,11 @@ const exportAllEvents = async () => {
     // 获取当前时区设置
     const timezoneOffsetValue = localStorage.getItem('timezoneOffset') || '8';
     // 调用后端导出功能，传递时区信息
-    const icalContent: string = await invoke('export_ical', { 
+    const icalContent: string = await invoke('export_ical', {
       eventIds: null,
-      timezoneOffset: parseInt(timezoneOffsetValue)
+      timezoneOffset: parseInt(timezoneOffsetValue),
     });
-    
+
     // 创建并下载文件
     const blob = new Blob([icalContent as BlobPart], { type: 'text/calendar' });
     const url = URL.createObjectURL(blob);
@@ -324,7 +337,10 @@ const exportAllEvents = async () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    await invoke('send_notification', {title: "日历已导出", body: "日历导出成功,请查看下载文件夹"});
+    await invoke('send_notification', {
+      title: '日历已导出',
+      body: '日历导出成功,请查看下载文件夹',
+    });
   } catch (error) {
     console.error('导出事件失败:', error);
     alert('导出事件失败，请重试');
@@ -342,15 +358,19 @@ const importEvents = async () => {
       try {
         const content = await file.text();
         // 获取当前时区设置并传递给后端导入功能
-        const timezoneOffsetValue = localStorage.getItem('timezoneOffset') || '8';
+        const timezoneOffsetValue =
+          localStorage.getItem('timezoneOffset') || '8';
         console.log(content);
         console.log(timezoneOffsetValue);
         // return;
-        await invoke('import_ical', { 
+        await invoke('import_ical', {
           icalContent: content,
-          timezoneOffset: parseInt(timezoneOffsetValue)
+          timezoneOffset: parseInt(timezoneOffsetValue),
         });
-        await invoke('send_notification', {title: "日历已导入", body: "日历导入成功"});
+        await invoke('send_notification', {
+          title: '日历已导入',
+          body: '日历导入成功',
+        });
         // 重新加载日历列表
         loadCalendars();
       } catch (error) {
@@ -544,7 +564,7 @@ const clearAllEvents = async () => {
   margin: 5px 0;
 }
 
-.note{
+.note {
   color: var(--text-color);
   background-color: var(--warning-color);
   padding: 2px;

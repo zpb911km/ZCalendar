@@ -3,11 +3,9 @@
     <div class="event-editor" @click.stop @keyup.esc="cancel">
       <div class="editor-header">
         <h3>{{ props.event?.id ? '编辑事件' : '新建事件' }}</h3>
-        <button class="close-btn" @click="cancel" aria-label="关闭">
-          ✕
-        </button>
+        <button class="close-btn" @click="cancel" aria-label="关闭">✕</button>
       </div>
-      
+
       <form class="editor-form" @submit.prevent="save">
         <div class="form-group">
           <label for="title">标题 *</label>
@@ -19,7 +17,7 @@
             placeholder="输入事件标题"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="description">描述</label>
           <textarea
@@ -45,37 +43,26 @@
             </select>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="start">开始时间</label>
-            <input
-              id="start"
-              v-model="formData.start"
-              type="datetime-local"
-            />
+            <input id="start" v-model="formData.start" type="datetime-local" />
           </div>
-          
+
           <div class="form-group">
             <label for="end">结束时间</label>
-            <input
-              id="end"
-              v-model="formData.end"
-              type="datetime-local"
-            />
+            <input id="end" v-model="formData.end" type="datetime-local" />
           </div>
         </div>
-        
+
         <div class="form-group checkbox-group">
           <label>
-            <input
-              v-model="formData.all_day"
-              type="checkbox"
-            />
+            <input v-model="formData.all_day" type="checkbox" />
             全天事件
           </label>
         </div>
-        
+
         <div class="form-group">
           <label for="location">位置</label>
           <input
@@ -85,7 +72,7 @@
             placeholder="输入事件位置"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="reminder">提醒</label>
           <select id="reminder" v-model="formData.reminder_minutes">
@@ -97,7 +84,7 @@
             <option value="1440">1天前</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="category">分类</label>
           <select id="category" v-model="formData.categories">
@@ -108,14 +95,10 @@
             <option value="会议">会议</option>
           </select>
         </div>
-        
+
         <div class="form-actions">
-          <button type="button" class="btn-cancel" @click="cancel">
-            取消
-          </button>
-          <button type="submit" class="btn-save">
-            保存
-          </button>
+          <button type="button" class="btn-cancel" @click="cancel">取消</button>
+          <button type="submit" class="btn-save">保存</button>
         </div>
       </form>
     </div>
@@ -137,22 +120,24 @@ const emit = defineEmits<{
 }>();
 
 // 表单数据
-const formData = reactive(props.event || {
-  title: '',
-  description: '',
-  start: new Date(),
-  end: new Date(Date.now() + 60 * 60 * 1000), // 默认1小时后
-  all_day: false,
-  location: '',
-  reminder_minutes: 15,
-  categories: '',
-  status: 'CONFIRMED'
-});
+const formData = reactive(
+  props.event || {
+    title: '',
+    description: '',
+    start: new Date(),
+    end: new Date(Date.now() + 60 * 60 * 1000), // 默认1小时后
+    all_day: false,
+    location: '',
+    reminder_minutes: 15,
+    categories: '',
+    status: 'CONFIRMED',
+  }
+);
 
 // 监听props.event的变化，初始化表单数据
 watch(
   () => props.event,
-  (newEvent) => {
+  newEvent => {
     if (newEvent) {
       // 确保日期字段是Date对象
       const ensureDate = (date: string | Date | undefined): Date => {
@@ -164,7 +149,7 @@ watch(
         }
         return new Date();
       };
-      
+
       formData.title = newEvent.title || '';
       formData.description = newEvent.description || '';
       formData.start = ensureDate(newEvent.start);
@@ -207,11 +192,11 @@ const save = () => {
     created_at: props.event?.created_at || new Date(),
     updated_at: new Date(),
     sequence: props.event?.sequence || 0,
-    status: formData.status? formData.status : 'CONFIRMED',
+    status: formData.status ? formData.status : 'CONFIRMED',
     location: formData.location || undefined,
-    categories: formData.categories || undefined
+    categories: formData.categories || undefined,
   } as CalendarEvent;
-  console.log(`emit save event: ${JSON.stringify(eventToSave, null, 2)}`)
+  console.log(`emit save event: ${JSON.stringify(eventToSave, null, 2)}`);
   emit('save', eventToSave);
 };
 
@@ -325,7 +310,7 @@ const onOverlayClick = () => {
 .form-group select:focus {
   outline: none;
   border-color: var(--primary-light);
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 .checkbox-group {

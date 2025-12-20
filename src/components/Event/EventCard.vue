@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     class="event-card"
     :class="{ 'all-day': event.all_day }"
     :style="{ backgroundColor: getEventBackgroundColor, color: getEventColor }"
@@ -8,7 +8,8 @@
     <div class="event-content">
       <div class="event-title">{{ event.title }}</div>
       <div v-if="!event.all_day" class="event-time">
-        {{ formatTime(ensureDate(event.start)) }} - {{ formatTime(ensureDate(event.end)) }}
+        {{ formatTime(ensureDate(event.start)) }} -
+        {{ formatTime(ensureDate(event.end)) }}
       </div>
       <div v-if="event.location" class="event-location">
         📍 {{ event.location }}
@@ -88,7 +89,9 @@ const onEventClick = () => {
   margin: 2px 0;
   color: var(--event-text-color);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
   display: flex;

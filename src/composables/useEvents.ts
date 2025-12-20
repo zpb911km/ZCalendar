@@ -128,10 +128,10 @@ export function useEvents() {
       const eventStart = dateUtils.startOfDay(new Date(event.start));
       const eventEnd = dateUtils.startOfDay(new Date(event.end));
       const checkDate = dateUtils.startOfDay(date);
-      
+
       // 全天事件
       if (event.all_day) {
-        return (eventStart <= checkDate && eventEnd >= checkDate);
+        return eventStart <= checkDate && eventEnd >= checkDate;
       }
       // 非全天事件
       else {
@@ -147,7 +147,9 @@ export function useEvents() {
     const now = new Date();
     return events.value
       .filter(event => new Date(event.start) >= now)
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      .sort(
+        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+      );
   });
 
   // 获取今天的事件
@@ -156,7 +158,7 @@ export function useEvents() {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     return events.value.filter(event => {
       const eventStart = new Date(event.start);
       return eventStart >= today && eventStart < tomorrow;
@@ -176,6 +178,6 @@ export function useEvents() {
     searchEvents,
     getEventsForDate,
     upcomingEvents,
-    todayEvents
+    todayEvents,
   };
 }

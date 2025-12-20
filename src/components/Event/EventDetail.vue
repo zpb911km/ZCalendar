@@ -3,68 +3,72 @@
     <div class="event-detail" @click.stop @keyup.esc="close">
       <div class="detail-header">
         <h3>{{ event.title }}</h3>
-        <button class="close-btn" @click="close" aria-label="关闭">
-          ✕
-        </button>
+        <button class="close-btn" @click="close" aria-label="关闭">✕</button>
       </div>
-      
+
       <div class="detail-content">
         <div class="event-info">
           <div class="info-item">
             <span class="info-label">时间</span>
             <span class="info-value">
               {{ formatDateTime(event.start) }}
-              <span v-if="!event.all_day"> - {{ formatDateTime(event.end) }}</span>
+              <span v-if="!event.all_day">
+                - {{ formatDateTime(event.end) }}</span
+              >
               <span v-else> (全天)</span>
             </span>
           </div>
-          
+
           <div v-if="event.description" class="info-item">
             <span class="info-label">描述</span>
             <span class="info-value">{{ event.description }}</span>
           </div>
-          
+
           <div v-if="event.location" class="info-item">
             <span class="info-label">位置</span>
             <span class="info-value">📍 {{ event.location }}</span>
           </div>
-          
+
           <div v-if="event.categories" class="info-item">
             <span class="info-label">分类</span>
             <span class="info-value">{{ event.categories }}</span>
           </div>
-          
+
           <div class="info-item">
             <span class="info-label">提醒</span>
             <span class="info-value">
-              {{ event.reminder_minutes > 0 ? `${event.reminder_minutes}分钟前` : '无提醒' }}
+              {{
+                event.reminder_minutes > 0
+                  ? `${event.reminder_minutes}分钟前`
+                  : '无提醒'
+              }}
             </span>
           </div>
-          
+
           <div class="info-item">
             <span class="info-label">状态</span>
             <span class="info-value">{{ event.status }}</span>
           </div>
-          
+
           <div class="info-item">
             <span class="info-label">创建时间</span>
-            <span class="info-value">{{ formatDateTime(event.created_at) }}</span>
+            <span class="info-value">{{
+              formatDateTime(event.created_at)
+            }}</span>
           </div>
-          
+
           <div class="info-item">
             <span class="info-label">更新时间</span>
-            <span class="info-value">{{ formatDateTime(event.updated_at) }}</span>
+            <span class="info-value">{{
+              formatDateTime(event.updated_at)
+            }}</span>
           </div>
         </div>
       </div>
-      
+
       <div class="detail-actions">
-        <button class="btn-edit" @click="edit">
-          编辑
-        </button>
-        <button class="btn-delete" @click="deleteEvent">
-          删除
-        </button>
+        <button class="btn-edit" @click="edit">编辑</button>
+        <button class="btn-delete" @click="deleteEvent">删除</button>
       </div>
     </div>
   </div>

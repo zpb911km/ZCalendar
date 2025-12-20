@@ -3,11 +3,11 @@
     <!-- 时间轴头部 -->
     <div class="time-header">
       <div class="time-slot-cell"></div>
-      <div 
-        v-for="day in weekDays" 
+      <div
+        v-for="day in weekDays"
         :key="day.date.toString()"
         class="date-header-cell"
-        :class="{ 'today': isToday(day.date) }"
+        :class="{ today: isToday(day.date) }"
       >
         <div class="day-of-week">{{ day.dayOfWeek }}</div>
         <div class="date-number">{{ day.date.getDate() }}</div>
@@ -16,8 +16,8 @@
 
     <!-- 时间轴内容 -->
     <div class="time-grid">
-      <div 
-        v-for="timeSlot in timeSlots" 
+      <div
+        v-for="timeSlot in timeSlots"
         :key="timeSlot.time.getTime()"
         class="time-row"
       >
@@ -27,8 +27,8 @@
         </div>
 
         <!-- 每日时间槽 -->
-        <div 
-          v-for="day in weekDays" 
+        <div
+          v-for="day in weekDays"
           :key="`${timeSlot.time}-${day.date.toString()}`"
           class="time-slot"
           @click="onTimeSlotClick(day.date, timeSlot.time)"
@@ -51,21 +51,48 @@
           <div
             v-if="getEventsForTimeSlot(day.date, timeSlot.time).length > 0"
             class="event-item"
-            :style="getEventStyle(getEventsForTimeSlot(day.date, timeSlot.time)[0], day.date)"
-            @click.stop="onEventClick(getEventsForTimeSlot(day.date, timeSlot.time)[0])"
+            :style="
+              getEventStyle(
+                getEventsForTimeSlot(day.date, timeSlot.time)[0],
+                day.date
+              )
+            "
+            @click.stop="
+              onEventClick(getEventsForTimeSlot(day.date, timeSlot.time)[0])
+            "
           >
-            <div class="event-content"> 
-              <div class="event-title">{{ getEventsForTimeSlot(day.date, timeSlot.time)[0].title }}</div>
-              <div v-if="!getEventsForTimeSlot(day.date, timeSlot.time)[0].all_day" class="event-time">
-                {{ formatTime(ensureDate(getEventsForTimeSlot(day.date, timeSlot.time)[0].start)) }} - {{ formatTime(ensureDate(getEventsForTimeSlot(day.date, timeSlot.time)[0].end)) }}
+            <div class="event-content">
+              <div class="event-title">
+                {{ getEventsForTimeSlot(day.date, timeSlot.time)[0].title }}
+              </div>
+              <div
+                v-if="!getEventsForTimeSlot(day.date, timeSlot.time)[0].all_day"
+                class="event-time"
+              >
+                {{
+                  formatTime(
+                    ensureDate(
+                      getEventsForTimeSlot(day.date, timeSlot.time)[0].start
+                    )
+                  )
+                }}
+                -
+                {{
+                  formatTime(
+                    ensureDate(
+                      getEventsForTimeSlot(day.date, timeSlot.time)[0].end
+                    )
+                  )
+                }}
               </div>
             </div>
           </div>
           <div
             v-if="getEventsForTimeSlot(day.date, timeSlot.time).length > 1"
             class="more-events"
-            >
-            + {{ getEventsForTimeSlot(day.date, timeSlot.time).length - 1 }} more
+          >
+            +
+            {{ getEventsForTimeSlot(day.date, timeSlot.time).length - 1 }} more
           </div>
         </div>
       </div>
@@ -102,7 +129,7 @@ const weekDays = computed(() => {
   const dates = dateUtils.getWeekDates(props.currentDate);
   return dates.map(date => ({
     date,
-    dayOfWeek: dateUtils.getWeekdayName(date)
+    dayOfWeek: dateUtils.getWeekdayName(date),
   }));
 });
 
@@ -111,10 +138,10 @@ const timeSlots = computed(() => {
   for (let hour = 0; hour < 24; hour++) {
     const time = new Date();
     time.setHours(hour, 0, 0, 0);
-    
+
     slots.push({
       time,
-      label: dateUtils.formatLocal(time, 'HH:mm')
+      label: dateUtils.formatLocal(time, 'HH:mm'),
     });
   }
   return slots;
@@ -129,14 +156,14 @@ const isToday = (date: Date): boolean => {
 
 const getEventsForTimeSlot = (_date: Date, time: Date): CalendarEvent[] => {
   const timeHour = time.getHours();
-  
+
   return props.events.filter(event => {
     // 全天事件不显示在时间轴上
     if (event.all_day) return false;
-    
+
     const eventStart = ensureDate(event.start);
     const eventStartHour = eventStart.getHours();
-    
+
     // 检查事件是否在当前时间槽内
     return (
       dateUtils.isSameDay(eventStart, dateUtils.startOfDay(_date)) &&
@@ -145,7 +172,10 @@ const getEventsForTimeSlot = (_date: Date, time: Date): CalendarEvent[] => {
   });
 };
 
-const getEventStyle = (event: CalendarEvent, _date: Date): Record<string, string> => {
+const getEventStyle = (
+  event: CalendarEvent,
+  _date: Date
+): Record<string, string> => {
   return {
     backgroundColor: getEventBackgroundColor(event),
     color: getEventColor(event),
@@ -199,8 +229,13 @@ const onEventClick = (event: CalendarEvent) => {
 const onTimeSlotClick = (date: Date, time: Date) => {
   // 合并日期和时间创建新的事件开始时间
   const eventStart = new Date(date);
-  eventStart.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
-  
+  eventStart.setHours(
+    time.getHours(),
+    time.getMinutes(),
+    time.getSeconds(),
+    time.getMilliseconds()
+  );
+
   emit('dateClick', eventStart);
 };
 </script>

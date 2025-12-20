@@ -2,7 +2,7 @@
   <div class="calendar-container">
     <!-- 日历导航栏 -->
     <div class="calendar-header">
-      <CalendarNavigation 
+      <CalendarNavigation
         v-model:currentDate="currentDate"
         v-model:currentView="currentView"
         @today="goToToday"
@@ -10,33 +10,33 @@
         @prev="prevPeriod"
       />
     </div>
-    
+
     <!-- 日历视图内容 -->
     <div class="calendar-content">
-      <MonthView 
+      <MonthView
         v-if="currentView === 'month'"
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
         @date-click="onDateClick"
       />
-      <WeekView 
+      <WeekView
         v-else-if="currentView === 'week'"
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
       />
-      <DayView 
+      <DayView
         v-else-if="currentView === 'day'"
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
       />
     </div>
-    
+
     <!-- 事件详情弹窗 -->
     <teleport to="body">
-      <EventDetail 
+      <EventDetail
         v-if="selectedEvent"
         :event="selectedEvent"
         @close="selectedEvent = null"
@@ -44,10 +44,10 @@
         @delete="onDeleteEvent"
       />
     </teleport>
-    
+
     <!-- 事件编辑弹窗 -->
     <teleport to="body">
-      <EventEditor 
+      <EventEditor
         v-if="showEventEditor"
         :event="editingEvent || undefined"
         @save="onSaveEvent"
@@ -70,13 +70,8 @@ import EventEditor from '../Event/EventEditor.vue';
 import { CalendarEvent } from '@/types/event';
 
 // 使用组合式函数
-const { 
-  currentDate, 
-  currentView, 
-  nextPeriod, 
-  prevPeriod, 
-  goToToday 
-} = useCalendar();
+const { currentDate, currentView, nextPeriod, prevPeriod, goToToday } =
+  useCalendar();
 
 // 使用状态管理
 const eventStore = useEventStore();
@@ -107,7 +102,7 @@ const onDateClick = (date: Date) => {
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
-    status: 'CONFIRMED'
+    status: 'CONFIRMED',
   } as CalendarEvent;
   showEventEditor.value = true;
 };
@@ -127,7 +122,7 @@ const onSaveEvent = async (eventData: CalendarEvent) => {
       }
       return date;
     };
-    
+
     if (eventData.id === 0) {
       // 创建新事件
       await eventStore.createEvent({

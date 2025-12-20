@@ -11,8 +11,8 @@
 
     <!-- 时间轴 -->
     <div class="time-axis">
-      <div 
-        v-for="timeSlot in timeSlots" 
+      <div
+        v-for="timeSlot in timeSlots"
         :key="timeSlot.time.getTime()"
         class="time-row"
       >
@@ -22,7 +22,7 @@
         </div>
 
         <!-- 时间槽 -->
-        <div 
+        <div
           class="time-slot"
           :class="{ 'current-time': isCurrentTime(timeSlot.time) }"
           @click="onTimeSlotClick(timeSlot.time)"
@@ -39,7 +39,8 @@
             <div class="event-content">
               <div class="event-title">{{ event.title }}</div>
               <div class="event-time">
-                {{ formatTime(ensureDate(event.start)) }} - {{ formatTime(ensureDate(event.end)) }}
+                {{ formatTime(ensureDate(event.start)) }} -
+                {{ formatTime(ensureDate(event.end)) }}
               </div>
               <div v-if="event.description" class="event-description">
                 {{ event.description }}
@@ -65,8 +66,6 @@ const ensureDate = (date: string | Date): Date => {
   return date;
 };
 
-
-
 // 定义props和emits
 const props = defineProps<{
   events: CalendarEvent[];
@@ -78,17 +77,15 @@ const emit = defineEmits<{
   (e: 'dateClick', date: Date): void;
 }>();
 
-
-
 const timeSlots = computed(() => {
   const slots = [];
   for (let hour = 0; hour < 24; hour++) {
     const time = new Date(props.currentDate);
     time.setHours(hour, 0, 0, 0);
-    
+
     slots.push({
       time,
-      label: dateUtils.formatLocal(time, 'HH:mm')
+      label: dateUtils.formatLocal(time, 'HH:mm'),
     });
   }
   return slots;
@@ -97,14 +94,14 @@ const timeSlots = computed(() => {
 // 方法
 const getEventsForTimeSlot = (time: Date): CalendarEvent[] => {
   const timeHour = time.getHours();
-  
+
   return props.events.filter(event => {
     // 全天事件不显示在时间轴上
     if (event.all_day) return false;
-    
+
     const eventStart = ensureDate(event.start);
     const eventStartHour = eventStart.getHours();
-    
+
     // 检查事件是否在当前时间槽内
     return (
       dateUtils.isSameDay(eventStart, props.currentDate) &&
@@ -126,7 +123,7 @@ const getEventStyle = (event: CalendarEvent): Record<string, string> => {
     padding: '4px',
     overflow: 'hidden',
     fontSize: '13px',
-    zIndex: '1'
+    zIndex: '1',
   };
 };
 
@@ -178,8 +175,13 @@ const onEventClick = (event: CalendarEvent) => {
 const onTimeSlotClick = (time: Date) => {
   // 合并当前日期和时间创建新的事件开始时间
   const eventStart = new Date(props.currentDate);
-  eventStart.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
-  
+  eventStart.setHours(
+    time.getHours(),
+    time.getMinutes(),
+    time.getSeconds(),
+    time.getMilliseconds()
+  );
+
   emit('dateClick', eventStart);
 };
 </script>

@@ -12,7 +12,7 @@ class ThemeManager {
   private static instance: ThemeManager;
   private settings: ThemeSettings = {
     theme: 'auto',
-    primaryColor: '#007bff'
+    primaryColor: '#007bff',
   };
 
   private constructor() {
@@ -30,12 +30,13 @@ class ThemeManager {
    * 从 localStorage 加载设置
    */
   public loadSettings(): void {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'auto' || 'auto';
+    const savedTheme =
+      (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'auto';
     const savedPrimaryColor = localStorage.getItem('primaryColor') || '#007bff';
 
     this.settings = {
       theme: savedTheme,
-      primaryColor: savedPrimaryColor
+      primaryColor: savedPrimaryColor,
     };
 
     this.applySettings();
@@ -62,10 +63,14 @@ class ThemeManager {
    */
   private applyTheme(): void {
     const root = document.documentElement;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches;
 
-    if (this.settings.theme === 'dark' || 
-        (this.settings.theme === 'auto' && prefersDark)) {
+    if (
+      this.settings.theme === 'dark' ||
+      (this.settings.theme === 'auto' && prefersDark)
+    ) {
       root.setAttribute('data-theme', 'dark');
     } else {
       root.setAttribute('data-theme', 'light');

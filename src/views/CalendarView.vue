@@ -2,7 +2,7 @@
   <div class="calendar-container">
     <!-- 日历导航栏 -->
     <div class="calendar-header">
-      <CalendarNavigation 
+      <CalendarNavigation
         v-model:currentDate="currentDate"
         v-model:currentView="currentView"
         @today="goToToday"
@@ -10,30 +10,30 @@
         @prev="prevPeriod"
         @view-change="changeView"
       />
-      
+
       <!-- <div class="calendar-actions">
         <button @click="openEventEditor()" class="btn btn-primary">添加事件</button>
         <button @click="importCalendar" class="btn btn-secondary">导入日历</button>
       </div> -->
     </div>
-    
+
     <!-- 日历视图内容 -->
     <div class="calendar-content">
-      <MonthView 
+      <MonthView
         v-if="currentView === 'month'"
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
         @date-click="onDateClick"
       />
-      <WeekView 
+      <WeekView
         v-else-if="currentView === 'week'"
         :events="events"
         :current-date="currentDate"
         @event-click="onEventClick"
         @date-click="onDateClick"
       />
-      <DayView 
+      <DayView
         v-else-if="currentView === 'day'"
         :events="events"
         :current-date="currentDate"
@@ -41,10 +41,10 @@
         @date-click="onDateClick"
       />
     </div>
-    
+
     <!-- 事件详情弹窗 -->
     <teleport to="body">
-      <EventDetail 
+      <EventDetail
         v-if="selectedEvent"
         :event="selectedEvent"
         @close="selectedEvent = null"
@@ -52,10 +52,10 @@
         @delete="onDeleteEvent"
       />
     </teleport>
-    
+
     <!-- 事件编辑弹窗 -->
     <teleport to="body">
-      <EventEditor 
+      <EventEditor
         v-if="showEventEditor"
         :event="editingEvent || undefined"
         @save="onSaveEvent"
@@ -78,8 +78,8 @@ import EventEditor from '../components/Event/EventEditor.vue';
 import { CalendarEvent } from '@/types/event';
 
 // 使用组合式函数
-const { 
-  currentDate, 
+const {
+  currentDate,
   currentView,
   nextPeriod,
   prevPeriod,
@@ -106,7 +106,7 @@ const onEventClick = (event: CalendarEvent) => {
 
 const onDateClick = (date: Date) => {
   // 在指定日期创建新事件
-  console.log(`create event at ${date}`)
+  console.log(`create event at ${date}`);
   editingEvent.value = {
     id: 0,
     title: '',
@@ -118,7 +118,7 @@ const onDateClick = (date: Date) => {
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
-    status: 'CONFIRMED'
+    status: 'CONFIRMED',
   } as CalendarEvent;
   showEventEditor.value = true;
 };
@@ -159,8 +159,8 @@ const onSaveEvent = async (eventData: CalendarEvent) => {
       }
       return date;
     };
-    console.log(`save event: ${JSON.stringify(eventData, null, 2)}`)
-    
+    console.log(`save event: ${JSON.stringify(eventData, null, 2)}`);
+
     if (eventData.id === 0) {
       // 创建新事件
       await eventStore.createEvent({
@@ -193,7 +193,6 @@ const onDeleteEvent = async (eventId: number) => {
     }
   }
 };
-
 
 // 组件挂载时加载事件和日历
 onMounted(async () => {

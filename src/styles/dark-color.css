@@ -1,34 +1,34 @@
 /* 深色主题变量 */
-[data-theme="dark"] {
+[data-theme='dark'] {
   /* 主色调 (调整为适合深色背景的版本) */
   --primary-color: #0d6efd;
   --primary-dark: #0b5ed7;
   --primary-light: #6ea8fe;
-  
+
   /* 背景色 */
   --background-color: #121212;
   --modal-background-color: #1e1e1e;
-  
+
   /* 文字颜色 */
   --text-color: #e0e0e0;
   --text-secondary-color: #a0a0a0;
   --text-light-color: #f0f0f0;
-  
+
   /* 边框颜色 */
   --border-color: #444444;
-  
+
   /* 状态颜色 (调整为适合深色主题的版本) */
   --success-color: #51cf66;
   --warning-color: #fcc419;
   --danger-color: #ff6b6b;
   --info-color: #3bc9db;
-  
+
   /* 背景色变体 */
   --secondary-color: #3e3e3e;
   --secondary-light: #343a40;
   --input-background-color: #2d2d2d;
   --card-background-color: #1e1e1e;
-  
+
   /* 日历特定颜色 (调整为适合深色主题) */
   --today-highlight: #454548;
   --weekend-color: #2d2d2d;
@@ -102,7 +102,7 @@
   color: var(--text-color);
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* 深色主题特定的输入框样式 */
@@ -117,7 +117,9 @@
   background-clip: padding-box;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .form-control:focus {
@@ -134,13 +136,17 @@
 }
 
 /* 深色主题特定的表单样式 */
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: var(--input-background-color);
   color: var(--text-color);
   border: 1px solid var(--border-color);
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
 }

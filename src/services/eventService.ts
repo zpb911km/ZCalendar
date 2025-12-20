@@ -21,11 +21,21 @@ const convertDateToFrontend = (dateStr: string): Date => {
 const convertEventToBackend = (event: any): any => {
   return {
     ...event,
-    start: event.start instanceof Date ? convertDateToBackend(event.start) : event.start,
-    end: event.end instanceof Date ? convertDateToBackend(event.end) : event.end,
-    created_at: event.created_at instanceof Date ? convertDateToBackend(event.created_at) : event.created_at,
-    updated_at: event.updated_at instanceof Date ? convertDateToBackend(event.updated_at) : event.updated_at,
-    id: event.id ? convertIdToBackend(event.id) : undefined
+    start:
+      event.start instanceof Date
+        ? convertDateToBackend(event.start)
+        : event.start,
+    end:
+      event.end instanceof Date ? convertDateToBackend(event.end) : event.end,
+    created_at:
+      event.created_at instanceof Date
+        ? convertDateToBackend(event.created_at)
+        : event.created_at,
+    updated_at:
+      event.updated_at instanceof Date
+        ? convertDateToBackend(event.updated_at)
+        : event.updated_at,
+    id: event.id ? convertIdToBackend(event.id) : undefined,
   };
 };
 
@@ -33,10 +43,22 @@ const convertEventFromBackend = (backendEvent: any): CalendarEvent => {
   return {
     ...backendEvent,
     id: convertIdToFrontend(backendEvent.id),
-    start: typeof backendEvent.start === 'string' ? convertDateToFrontend(backendEvent.start) : backendEvent.start,
-    end: typeof backendEvent.end === 'string' ? convertDateToFrontend(backendEvent.end) : backendEvent.end,
-    created_at: typeof backendEvent.created_at === 'string' ? convertDateToFrontend(backendEvent.created_at) : backendEvent.created_at,
-    updated_at: typeof backendEvent.updated_at === 'string' ? convertDateToFrontend(backendEvent.updated_at) : backendEvent.updated_at,
+    start:
+      typeof backendEvent.start === 'string'
+        ? convertDateToFrontend(backendEvent.start)
+        : backendEvent.start,
+    end:
+      typeof backendEvent.end === 'string'
+        ? convertDateToFrontend(backendEvent.end)
+        : backendEvent.end,
+    created_at:
+      typeof backendEvent.created_at === 'string'
+        ? convertDateToFrontend(backendEvent.created_at)
+        : backendEvent.created_at,
+    updated_at:
+      typeof backendEvent.updated_at === 'string'
+        ? convertDateToFrontend(backendEvent.updated_at)
+        : backendEvent.updated_at,
   } as CalendarEvent;
 };
 
@@ -62,12 +84,16 @@ export class EventServiceImpl implements EventService {
   }
 
   async getEventsByDate(date: Date): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('get_events_by_date', { date: convertDateToBackend(date) });
+    const result = await invoke<any[]>('get_events_by_date', {
+      date: convertDateToBackend(date),
+    });
     return result.map(convertEventFromBackend);
   }
 
   async getEventById(id: number): Promise<CalendarEvent | null> {
-    const result = await invoke<any | null>('get_event_by_id', { id: convertIdToBackend(id) });
+    const result = await invoke<any | null>('get_event_by_id', {
+      id: convertIdToBackend(id),
+    });
     return result ? convertEventFromBackend(result) : null;
   }
 
@@ -88,9 +114,9 @@ export class EventServiceImpl implements EventService {
   }
 
   async getEventsInRange(start: Date, end: Date): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('get_events_in_range', { 
-      start: convertDateToBackend(start), 
-      end: convertDateToBackend(end) 
+    const result = await invoke<any[]>('get_events_in_range', {
+      start: convertDateToBackend(start),
+      end: convertDateToBackend(end),
     });
     return result.map(convertEventFromBackend);
   }
@@ -101,7 +127,9 @@ export class EventServiceImpl implements EventService {
   }
 
   async exportIcal(eventIds?: number[]): Promise<string> {
-    return await invoke('export_ical', { eventIds: eventIds?.map(id => convertIdToBackend(id)) || null });
+    return await invoke('export_ical', {
+      eventIds: eventIds?.map(id => convertIdToBackend(id)) || null,
+    });
   }
 
   async searchEvents(query: string): Promise<CalendarEvent[]> {

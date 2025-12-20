@@ -13,17 +13,19 @@ export const useCalendarStore = defineStore('calendar', {
 
   getters: {
     // 获取当前日历
-    currentCalendar: (state) => {
+    currentCalendar: state => {
       if (!state.currentCalendarId) {
-        return state.calendars.find(cal => cal.is_primary) || state.calendars[0];
+        return (
+          state.calendars.find(cal => cal.is_primary) || state.calendars[0]
+        );
       }
       return state.calendars.find(cal => cal.id === state.currentCalendarId);
     },
-    
+
     // 获取默认日历
-    defaultCalendar: (state) => {
+    defaultCalendar: state => {
       return state.calendars.find(cal => cal.is_primary) || state.calendars[0];
-    }
+    },
   },
 
   actions: {
@@ -40,11 +42,16 @@ export const useCalendarStore = defineStore('calendar', {
       }
     },
 
-    async createCalendar(calendarData: Omit<Calendar, 'id' | 'createdAt' | 'updatedAt'>) {
+    async createCalendar(
+      calendarData: Omit<Calendar, 'id' | 'createdAt' | 'updatedAt'>
+    ) {
       this.loading = true;
       this.error = null;
       try {
-        const newCalendar = await calendarService.createCalendar({...calendarData, id: ''});
+        const newCalendar = await calendarService.createCalendar({
+          ...calendarData,
+          id: '',
+        });
         this.calendars.push(newCalendar);
         if (newCalendar.is_primary) {
           this.currentCalendarId = newCalendar.id;
@@ -61,6 +68,6 @@ export const useCalendarStore = defineStore('calendar', {
 
     setCurrentCalendar(calendarId: string) {
       this.currentCalendarId = calendarId;
-    }
+    },
   },
 });

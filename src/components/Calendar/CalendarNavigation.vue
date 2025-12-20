@@ -4,14 +4,12 @@
       <button class="nav-btn" @click="prev" :aria-label="`上一个${viewLabel}`">
         &lt;
       </button>
-      <button class="nav-btn today-btn" @click="goToToday">
-        今天
-      </button>
+      <button class="nav-btn today-btn" @click="goToToday">今天</button>
       <button class="nav-btn" @click="next" :aria-label="`下一个${viewLabel}`">
         &gt;
       </button>
     </div>
-    
+
     <div class="view-selector">
       <button
         v-for="view in viewTypes"
@@ -23,9 +21,8 @@
         {{ view.label }}
       </button>
     </div>
-    
   </div>
-  <div style="align-items: center; text-align: center;">
+  <div style="align-items: center; text-align: center">
     <div class="current-date">
       {{ formattedCurrentDate }}
     </div>
@@ -53,14 +50,14 @@ const emit = defineEmits<{
 }>();
 
 // 使用组合式函数
-const { 
+const {
   currentDate,
-  currentViewTitle, 
-  nextPeriod, 
-  prevPeriod, 
+  currentViewTitle,
+  nextPeriod,
+  prevPeriod,
   goToToday: goToTodayFromHook,
   changeView: changeViewFromHook,
-  viewTypes
+  viewTypes,
 } = useCalendar(props.currentDate);
 
 // 计算属性
@@ -68,10 +65,14 @@ const formattedCurrentDate = computed(() => currentViewTitle.value);
 
 const viewLabel = computed(() => {
   switch (props.currentView) {
-    case 'month': return '月';
-    case 'week': return '周';
-    case 'day': return '日';
-    default: return '月';
+    case 'month':
+      return '月';
+    case 'week':
+      return '周';
+    case 'day':
+      return '日';
+    default:
+      return '月';
   }
 });
 

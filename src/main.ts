@@ -1,9 +1,9 @@
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import App from "./App.vue";
-import router from './router'
-import "./styles/color.css";
-import "./styles/dark-color.css";
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router';
+import './styles/color.css';
+import './styles/dark-color.css';
 import { themeManager } from './utils/themeManager';
 
 // 创建Pinia实例
@@ -13,4 +13,4 @@ const pinia = createPinia();
 themeManager.loadSettings();
 themeManager.watchSystemThemeChange();
 
-createApp(App).use(pinia).use(router).mount("#app");
+createApp(App).use(pinia).use(router).mount('#app');

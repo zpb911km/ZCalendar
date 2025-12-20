@@ -1,48 +1,45 @@
 <template>
   <div class="month-view">
     <div class="weekdays-header">
-      <div 
-        v-for="day in weekdays" 
-        :key="day" 
-        class="weekday-cell"
-      >
+      <div v-for="day in weekdays" :key="day" class="weekday-cell">
         {{ day }}
       </div>
     </div>
-    
+
     <div class="weeks-container">
-      <div 
-        v-for="(week, weekIndex) in weeks" 
-        :key="weekIndex" 
-        class="week-row"
-      >
+      <div v-for="(week, weekIndex) in weeks" :key="weekIndex" class="week-row">
         <div
           v-for="(day, dayIndex) in week"
           :key="`${weekIndex}-${dayIndex}`"
           class="day-cell"
           :class="{
             'current-month': isCurrentMonth(day),
-            'today': isToday(day),
-            'other-month': !isCurrentMonth(day)
+            today: isToday(day),
+            'other-month': !isCurrentMonth(day),
           }"
           @click="onDateClick(day)"
         >
           <div class="day-number">
             {{ day.getDate() }}
           </div>
-          
+
           <div class="day-events">
             <div
               v-for="event in getEventsForDay(day)"
               :key="event.id"
               class="event-item"
-              :style="{ color: getEventColor(event), backgroundColor: getEventBackgroundColor(event) }"
+              :style="{
+                color: getEventColor(event),
+                backgroundColor: getEventBackgroundColor(event),
+              }"
               @click.stop="onEventClick(event)"
             >
               <span class="event-title">{{ event.title }}</span>
-              <span v-if="!event.all_day" class="event-time">{{ formatTime(ensureDate(event.start)) }}</span>
+              <span v-if="!event.all_day" class="event-time">{{
+                formatTime(ensureDate(event.start))
+              }}</span>
             </div>
-            
+
             <div
               v-if="hasMoreEvents(day)"
               class="more-events"
@@ -70,8 +67,6 @@ const ensureDate = (date: string | Date): Date => {
   return date;
 };
 
-
-
 // 定义props和emits
 const props = defineProps<{
   events: CalendarEvent[];
@@ -89,11 +84,11 @@ const weekdays = computed(() => ['日', '一', '二', '三', '四', '五', '六'
 const weeks = computed(() => {
   const monthDates = dateUtils.getMonthDates(props.currentDate);
   const weeksArray: Date[][] = [];
-  
+
   for (let i = 0; i < monthDates.length; i += 7) {
     weeksArray.push(monthDates.slice(i, i + 7));
   }
-  
+
   return weeksArray;
 });
 
@@ -141,27 +136,29 @@ const getEventsForDay = (date: Date): CalendarEvent[] => {
   const startOfDay = dateUtils.startOfDay(date);
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
-  
-  return props.events.filter(event => {
-    const eventStart = ensureDate(event.start);
-    
-    // 全天事件
-    if (event.all_day) {
-      const eventStartDate = dateUtils.startOfDay(eventStart);
-      return dateUtils.isSameDay(eventStartDate, startOfDay);
-    }
-    // 非全天事件
-    else {
-      return eventStart >= startOfDay && eventStart < endOfDay;
-    }
-  }).slice(0, 3); // 只显示前3个事件，多余的用"更多"显示
+
+  return props.events
+    .filter(event => {
+      const eventStart = ensureDate(event.start);
+
+      // 全天事件
+      if (event.all_day) {
+        const eventStartDate = dateUtils.startOfDay(eventStart);
+        return dateUtils.isSameDay(eventStartDate, startOfDay);
+      }
+      // 非全天事件
+      else {
+        return eventStart >= startOfDay && eventStart < endOfDay;
+      }
+    })
+    .slice(0, 3); // 只显示前3个事件，多余的用"更多"显示
 };
 
 const hasMoreEvents = (date: Date): boolean => {
   const startOfDay = dateUtils.startOfDay(date);
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
-  
+
   const allDayEvents = props.events.filter(event => {
     if (event.all_day) {
       const eventStartDate = dateUtils.startOfDay(ensureDate(event.start));
@@ -169,7 +166,7 @@ const hasMoreEvents = (date: Date): boolean => {
     }
     return false;
   });
-  
+
   const timedEvents = props.events.filter(event => {
     if (!event.all_day) {
       const eventStart = ensureDate(event.start);
@@ -177,7 +174,7 @@ const hasMoreEvents = (date: Date): boolean => {
     }
     return false;
   });
-  
+
   const totalEvents = allDayEvents.length + timedEvents.length;
   return totalEvents > 3;
 };
@@ -186,7 +183,7 @@ const getMoreEventsCount = (date: Date): number => {
   const startOfDay = dateUtils.startOfDay(date);
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
-  
+
   const allDayEvents = props.events.filter(event => {
     if (event.all_day) {
       const eventStartDate = dateUtils.startOfDay(ensureDate(event.start));
@@ -194,7 +191,7 @@ const getMoreEventsCount = (date: Date): number => {
     }
     return false;
   });
-  
+
   const timedEvents = props.events.filter(event => {
     if (!event.all_day) {
       const eventStart = ensureDate(event.start);
@@ -202,7 +199,7 @@ const getMoreEventsCount = (date: Date): number => {
     }
     return false;
   });
-  
+
   const totalEvents = allDayEvents.length + timedEvents.length;
   return Math.max(0, totalEvents - 3);
 };
