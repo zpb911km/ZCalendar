@@ -713,7 +713,7 @@ async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: Sqli
         loop {
             check_upcoming_events(&app_handle, &pool).await;
             // 每分钟检查一次即将到来的事件
-            sleep(TokioDuration::from_secs(50)).await;
+            sleep(TokioDuration::from_secs(60)).await;
         }
     });
 }
