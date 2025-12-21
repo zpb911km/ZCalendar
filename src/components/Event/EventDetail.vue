@@ -112,9 +112,7 @@ const edit = () => {
 };
 
 const deleteEvent = () => {
-  if (confirm('确定要删除这个事件吗？')) {
-    emit('delete', props.event.id);
-  }
+  emit('delete', props.event.id);
 };
 
 const onOverlayClick = () => {

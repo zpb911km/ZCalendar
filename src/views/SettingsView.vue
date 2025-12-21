@@ -39,14 +39,25 @@
             class="reminder-input"
           />
         </div>
-        <div class="setting-item">
+        <div v-if="showNotifacationWarning" class="setting-item">
           <div class="note">
-            <p>请在系统设置处开启通知权限。并自定义通知的提醒方式。</p>
+            <p>请在系统设置处开启通知权限</p>
+            <p>并自定义通知的提醒方式。</p>
             <!-- Android通知配置说明：
                 1. 通知样式、提示音和悬浮效果通过Android原生通知渠道实现
                 2. 权限配置在AndroidManifest.xml中自动处理
                 3. 高优先级通知可实现悬浮效果
                 4. 提示音和震动通过Android通知渠道配置实现 -->
+            <button
+              style="
+                background-color: transparent;
+                border: 1px solid var(--border-color);
+                color: var(--text-color);
+              "
+              @click="changeShowNotifacationWarning"
+            >
+              我知道了
+            </button>
           </div>
         </div>
       </div>
@@ -202,6 +213,7 @@ const workdayStart = ref('09:00');
 const workdayEnd = ref('18:00');
 const timezoneOffset = ref('8'); // 默认UTC+8
 const buildDate = ref(new Date().toISOString().split('T')[0]);
+const showNotifacationWarning = ref(true);
 
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
@@ -225,7 +237,10 @@ const loadSettings = () => {
   const savedWorkdayStart = localStorage.getItem('workdayStart') || '09:00';
   const savedWorkdayEnd = localStorage.getItem('workdayEnd') || '18:00';
   const savedTimezoneOffset = localStorage.getItem('timezoneOffset') || '8';
+  const showNotifacationWarningValue =
+    localStorage.getItem('showNotifacationWarning') !== 'false';
 
+  showNotifacationWarning.value = showNotifacationWarningValue;
   theme.value = settings.theme;
   primaryColor.value = settings.primaryColor;
   defaultReminderMinutes.value = savedDefaultReminder;
@@ -233,6 +248,11 @@ const loadSettings = () => {
   workdayStart.value = savedWorkdayStart;
   workdayEnd.value = savedWorkdayEnd;
   timezoneOffset.value = savedTimezoneOffset;
+};
+
+const changeShowNotifacationWarning = () => {
+  showNotifacationWarning.value = false;
+  localStorage.setItem('showNotifacationWarning', 'false');
 };
 
 const loadCalendars = async () => {

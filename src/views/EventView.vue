@@ -278,13 +278,11 @@ const editEvent = (event: CalendarEvent) => {
 };
 
 const deleteEvent = async (id: number) => {
-  if (confirm('确定要删除这个事件吗？')) {
-    try {
-      await eventStore.deleteEvent(id);
-      closeEventDetail();
-    } catch (error) {
-      console.error('删除事件失败:', error);
-    }
+  try {
+    await eventStore.deleteEvent(id);
+    closeEventDetail();
+  } catch (error) {
+    console.error('删除事件失败:', error);
   }
 };
 

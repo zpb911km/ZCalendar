@@ -864,13 +864,13 @@ pub fn run() {
 
                         // 由于当前Tauri版本可能不直接支持创建通知渠道，
                         // 我们通过发送一个通知来触发必要的权限和配置
-                        let _ = app_handle.plugin(tauri_plugin_notification::init());
-                        let _ = app_handle
-                            .notification()
-                            .builder()
-                            .title("初始化通知")
-                            .body("通知系统已准备就绪")
-                            .show();
+                        // let _ = app_handle.plugin(tauri_plugin_notification::init());
+                        // let _ = app_handle
+                        //     .notification()
+                        //     .builder()
+                        //     .title("初始化通知")
+                        //     .body("通知系统已准备就绪")
+                        //     .show();
                     });
                 }
                 #[cfg(not(target_os = "android"))]

@@ -8,7 +8,7 @@
 
       <form class="editor-form" @submit.prevent="save">
         <div class="form-group">
-          <label for="title">标题 *</label>
+          <label for="title">标题</label>
           <input
             id="title"
             v-model="formData.title"
@@ -47,12 +47,12 @@
         <div class="form-row">
           <div class="form-group">
             <label for="start">开始时间</label>
-            <input id="start" v-model="formData.start" type="datetime-local" />
+            <input id="start" v-model="startDateTime" type="datetime-local" />
           </div>
 
           <div class="form-group">
             <label for="end">结束时间</label>
-            <input id="end" v-model="formData.end" type="datetime-local" />
+            <input id="end" v-model="endDateTime" type="datetime-local" />
           </div>
         </div>
 
@@ -74,15 +74,26 @@
         </div>
 
         <div class="form-group">
-          <label for="reminder">提醒</label>
-          <select id="reminder" v-model="formData.reminder_minutes">
+          <label for="reminder">提醒提前时间(分钟, 0表示无提醒)</label>
+          <select id="reminder" v-model="reminderChoice">
             <option value="0">无提醒</option>
             <option value="5">5分钟前</option>
             <option value="15">15分钟前</option>
             <option value="30">30分钟前</option>
             <option value="60">1小时前</option>
             <option value="1440">1天前</option>
+            <option value="custom">自定义</option>
           </select>
+          <input
+            id="custom-reminder"
+            v-if="reminderChoice === 'custom'"
+            v-model="reminderCustomMinutes"
+            type="number"
+            min="0"
+            max="1440"
+            placeholder="输入提前时间"
+            class="reminder-input"
+          />
         </div>
 
         <div class="form-group">
@@ -106,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { reactive, ref, watch, computed } from 'vue';
 import { CalendarEvent } from '@/types/event';
 
 // 定义props和emits
@@ -119,6 +130,18 @@ const emit = defineEmits<{
   (e: 'cancel'): void;
 }>();
 
+const defaultReminderMinutes =
+  Number(localStorage.getItem('defaultReminderMinutes')) || 15;
+const reminderChoice = ref<Number | String>(
+  [0, 5, 15, 30, 60, 1440].includes(defaultReminderMinutes)
+    ? defaultReminderMinutes
+    : 'custom'
+);
+const reminderCustomMinutes = ref(defaultReminderMinutes);
+console.log(
+  `init status: ${defaultReminderMinutes}, ${reminderChoice.value}, ${reminderCustomMinutes.value}`
+);
+
 // 表单数据
 const formData = reactive(
   props.event || {
@@ -128,7 +151,6 @@ const formData = reactive(
     end: new Date(Date.now() + 60 * 60 * 1000), // 默认1小时后
     all_day: false,
     location: '',
-    reminder_minutes: 15,
     categories: '',
     status: 'CONFIRMED',
   }
@@ -156,7 +178,19 @@ watch(
       formData.end = ensureDate(newEvent.end);
       formData.all_day = newEvent.all_day || false;
       formData.location = newEvent.location || '';
-      formData.reminder_minutes = newEvent.reminder_minutes || 15;
+      // formData.reminder_minutes = newEvent.reminder_minutes || 15;
+      console.log(
+        `new event: ${[0, 5, 15, 30, 60, 1440].includes(newEvent.reminder_minutes)}`
+      );
+      reminderChoice.value = [0, 5, 15, 30, 60, 1440].includes(
+        newEvent.reminder_minutes
+      )
+        ? newEvent.reminder_minutes
+        : 'custom';
+      reminderCustomMinutes.value = newEvent.reminder_minutes;
+      console.log(
+        `changed status: ${newEvent.reminder_minutes}, ${reminderChoice.value}, ${reminderCustomMinutes.value}`
+      );
       formData.categories = newEvent.categories || '';
       formData.status = newEvent.status || 'CONFIRMED';
     } else {
@@ -167,6 +201,47 @@ watch(
   { immediate: true }
 );
 
+// 日期时间格式转换计算属性
+const startDateTime = computed({
+  get() {
+    if (formData.start instanceof Date) {
+      return formatDateTimeLocal(formData.start);
+    }
+    return '';
+  },
+  set(value: string) {
+    if (value) {
+      formData.start = new Date(value);
+    }
+  },
+});
+
+const endDateTime = computed({
+  get() {
+    if (formData.end instanceof Date) {
+      return formatDateTimeLocal(formData.end);
+    }
+    return '';
+  },
+  set(value: string) {
+    if (value) {
+      formData.end = new Date(value);
+    }
+  },
+});
+
+// 将Date对象格式化为'YYYY-MM-DDTHH:mm'格式的函数
+function formatDateTimeLocal(date: Date): string {
+  const pad = (num: number) => num.toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 // 方法
 const resetForm = () => {
   formData.title = '';
@@ -175,9 +250,14 @@ const resetForm = () => {
   formData.end = new Date(Date.now() + 60 * 60 * 1000);
   formData.all_day = false;
   formData.location = '';
-  formData.reminder_minutes = 15;
   formData.categories = '';
   formData.status = 'CONFIRMED';
+  reminderChoice.value = [0, 5, 15, 30, 60, 1440].includes(
+    defaultReminderMinutes
+  )
+    ? defaultReminderMinutes
+    : 'custom';
+  reminderCustomMinutes.value = defaultReminderMinutes;
 };
 
 const save = () => {
@@ -185,10 +265,14 @@ const save = () => {
     id: props.event?.id || 0, // 0表示新建
     title: formData.title,
     description: formData.description,
-    start: new Date(formData.start),
-    end: new Date(formData.end),
+    start: formData.start,
+    end: formData.end,
     all_day: formData.all_day,
-    reminder_minutes: Number(formData.reminder_minutes),
+    reminder_minutes: Number(
+      reminderChoice.value !== 'custom'
+        ? reminderChoice.value
+        : reminderCustomMinutes.value
+    ),
     created_at: props.event?.created_at || new Date(),
     updated_at: new Date(),
     sequence: props.event?.sequence || 0,

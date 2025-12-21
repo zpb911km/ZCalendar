@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCalendar } from '@/composables/useCalendar';
+import { dateUtils } from '@/utils/dateUtils';
 
 // 定义props和emits
 const props = defineProps<{
@@ -51,8 +52,6 @@ const emit = defineEmits<{
 
 // 使用组合式函数
 const {
-  currentDate,
-  currentViewTitle,
   nextPeriod,
   prevPeriod,
   goToToday: goToTodayFromHook,
@@ -60,8 +59,23 @@ const {
   viewTypes,
 } = useCalendar(props.currentDate);
 
-// 计算属性
-const formattedCurrentDate = computed(() => currentViewTitle.value);
+// 计算属性 - 使用父组件的日期和视图来计算标题
+const formattedCurrentDate = computed(() => {
+  switch (props.currentView) {
+    case 'month':
+      return dateUtils.getMonthName(props.currentDate);
+    case 'week': {
+      const weekDates = dateUtils.getWeekDates(props.currentDate);
+      const startDate = weekDates[0];
+      const endDate = weekDates[6];
+      return `${dateUtils.formatLocal(startDate, 'yyyy年MM月dd日')} - ${dateUtils.formatLocal(endDate, 'MM月dd日')}`;
+    }
+    case 'day':
+      return dateUtils.formatLocal(props.currentDate, 'yyyy年MM月dd日');
+    default:
+      return dateUtils.getMonthName(props.currentDate);
+  }
+});
 
 const viewLabel = computed(() => {
   switch (props.currentView) {
@@ -80,19 +94,16 @@ const viewLabel = computed(() => {
 const next = () => {
   nextPeriod();
   emit('next');
-  emit('date-change', currentDate.value);
 };
 
 const prev = () => {
   prevPeriod();
   emit('prev');
-  emit('date-change', currentDate.value);
 };
 
 const goToToday = () => {
   goToTodayFromHook();
   emit('today');
-  emit('date-change', currentDate.value);
 };
 
 const changeView = (view: 'month' | 'week' | 'day') => {

@@ -18,7 +18,12 @@
     </div>
 
     <!-- 日历视图内容 -->
-    <div class="calendar-content">
+    <div
+      class="calendar-content"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
+    >
       <MonthView
         v-if="currentView === 'month'"
         :events="events"
@@ -101,12 +106,18 @@ const events = computed(() => eventStore.events);
 
 // 方法
 const onEventClick = (event: CalendarEvent) => {
+  isSliding.value = false;
   selectedEvent.value = event;
 };
+
+const defaultReminderMinutes =
+  Number(localStorage.getItem('defaultReminderMinutes')) || 15;
+console.log(`default reminder minutes: ${defaultReminderMinutes}`);
 
 const onDateClick = (date: Date) => {
   // 在指定日期创建新事件
   console.log(`create event at ${date}`);
+  isSliding.value = false;
   editingEvent.value = {
     id: 0,
     title: '',
@@ -114,7 +125,7 @@ const onDateClick = (date: Date) => {
     start: date,
     end: new Date(date.getTime() + 60 * 60 * 1000), // 默认1小时后结束
     all_day: false,
-    reminder_minutes: 15,
+    reminder_minutes: defaultReminderMinutes,
     created_at: new Date(),
     updated_at: new Date(),
     sequence: 0,
@@ -192,6 +203,35 @@ const onDeleteEvent = async (eventId: number) => {
       console.error('删除事件失败:', error);
     }
   }
+};
+
+// 触摸事件处理相关变量
+const touchStartX = ref(0);
+const touchEndX = ref(0);
+const isSliding = ref(false);
+
+// 触摸事件处理方法
+const handleTouchStart = (event: TouchEvent) => {
+  touchStartX.value = event.touches[0].clientX;
+};
+
+const handleTouchMove = (event: TouchEvent) => {
+  touchEndX.value = event.touches[0].clientX;
+  isSliding.value = true;
+};
+
+const handleTouchEnd = () => {
+  if (!isSliding.value) {
+    return;
+  }
+  if (touchStartX.value - touchEndX.value > 200) {
+    // 从左向右滑动，触发 nextPeriod
+    nextPeriod();
+  } else if (touchEndX.value - touchStartX.value > 200) {
+    // 从右向左滑动，触发 prevPeriod
+    prevPeriod();
+  }
+  isSliding.value = false;
 };
 
 // 组件挂载时加载事件和日历

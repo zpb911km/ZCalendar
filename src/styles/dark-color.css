@@ -18,10 +18,10 @@
   --border-color: #444444;
 
   /* 状态颜色 (调整为适合深色主题的版本) */
-  --success-color: #51cf66;
-  --warning-color: #fcc419;
-  --danger-color: #ff6b6b;
-  --info-color: #3bc9db;
+  --success-color: #348e43;
+  --warning-color: #b48b12;
+  --danger-color: #b54d4d;
+  --info-color: #258491;
 
   /* 背景色变体 */
   --secondary-color: #3e3e3e;
