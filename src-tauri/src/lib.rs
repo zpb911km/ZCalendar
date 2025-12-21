@@ -492,6 +492,60 @@ async fn export_ical(
 }
 
 #[tauri::command]
+async fn get_platform() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        return Ok("windows".to_string());
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        return Ok("macos".to_string());
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        return Ok("linux".to_string());
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        return Ok("android".to_string());
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        return Ok("ios".to_string());
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux", target_os = "android", target_os = "ios")))]
+    {
+        return Ok("unknown".to_string());
+    }
+}
+
+#[tauri::command]
+async fn save_file_to_downloads(app_handle: tauri::AppHandle, content: String, filename: String) -> Result<String, String> {
+    use std::fs;
+    use std::io::Write;
+    
+    // 获取下载目录
+    let downloads_dir = app_handle.path().download_dir()
+        .map_err(|e| format!("Failed to get download directory: {}", e))?;
+    
+    let file_path = downloads_dir.join(&filename);
+    
+    // 写入文件
+    let mut file = fs::File::create(&file_path)
+        .map_err(|e| format!("Failed to create file: {}", e))?;
+    
+    file.write_all(content.as_bytes())
+        .map_err(|e| format!("Failed to write to file: {}", e))?;
+    
+    Ok(file_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 async fn search_events(
     pool: tauri::State<'_, SqlitePool>,
     query: String,
@@ -857,7 +911,7 @@ pub fn run() {
                     let _ = app.handle().plugin(notification_plugin);
 
                     // 等待应用完全初始化后创建通知渠道
-                    let app_handle = app.handle().clone();
+                    let _ = app.handle().clone();
                     tauri::async_runtime::spawn(async move {
                         // 等待一点时间确保插件完全加载
                         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
@@ -900,7 +954,9 @@ pub fn run() {
             update_calendar,
             delete_calendar,
             get_calendar_events,
-            send_notification
+            send_notification,
+            get_platform,
+            save_file_to_downloads,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

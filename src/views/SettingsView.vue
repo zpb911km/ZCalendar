@@ -347,20 +347,57 @@ const exportAllEvents = async () => {
       timezoneOffset: parseInt(timezoneOffsetValue),
     });
 
-    // 创建并下载文件
-    const blob = new Blob([icalContent as BlobPart], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'calendar-export.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    await invoke('send_notification', {
-      title: '日历已导出',
-      body: '日历导出成功,请查看下载文件夹',
-    });
+    // 检测是否在Android平台上
+    try {
+      // 尝试使用app插件检测平台
+      const platform = await invoke('get_platform');
+      console.log(platform);
+      if (platform === 'android') {
+        // 在Android上使用Tauri命令保存文件到下载目录
+        await invoke('save_file_to_downloads', {
+          content: icalContent,
+          filename: 'calendar-export.ics',
+        });
+        await invoke('send_notification', {
+          title: '日历已导出',
+          body: '日历导出成功,已保存到下载文件夹',
+        });
+      } else {
+        // 桌面端保持原来的下载方式
+        const blob = new Blob([icalContent as BlobPart], {
+          type: 'text/calendar',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'calendar-export.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        await invoke('send_notification', {
+          title: '日历已导出',
+          body: '日历导出成功,请查看下载文件夹',
+        });
+      }
+    } catch {
+      // 如果无法获取平台信息，使用桌面端的下载方式
+      const blob = new Blob([icalContent as BlobPart], {
+        type: 'text/calendar',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'calendar-export.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      await invoke('send_notification', {
+        title: '日历已导出',
+        body: '日历导出成功,请查看下载文件夹',
+      });
+    }
   } catch (error) {
     console.error('导出事件失败:', error);
     alert('导出事件失败，请重试');

@@ -318,7 +318,7 @@ const onOverlayClick = () => {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
 .editor-header {
