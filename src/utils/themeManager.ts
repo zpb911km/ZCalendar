@@ -172,4 +172,58 @@ class ThemeManager {
   }
 }
 
+const hashString = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 4) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+};
+
+export const generateHslColorC = (text: string): string => {
+  const savedTheme =
+    (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'dark';
+  let lightness: number;
+  if (savedTheme === 'light') {
+    lightness = 30;
+  } else if (savedTheme === 'dark') {
+    lightness = 70;
+  } else {
+    lightness = 50;
+  }
+  const hash = hashString(text);
+
+  // H: 0-360，使用 hash 对 360 取模
+  const hue = hash % 360;
+
+  // S: 50-100%，使用 hash 生成 50-100 之间的值
+  const saturation = 50 + (hash % 50);
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+export const generateHslColorB = (text: string): string => {
+  const savedTheme =
+    (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'dark';
+  let lightness: number;
+  if (savedTheme === 'light') {
+    lightness = 70;
+  } else if (savedTheme === 'dark') {
+    lightness = 30;
+  } else {
+    lightness = 50;
+  }
+  const hash = hashString(text);
+
+  // H: 0-360，使用 hash 对 360 取模
+  const hue = ((hash % 360) + 180) % 360;
+
+  // S: 50-100%，使用 hash 生成 50-100 之间的值
+  const saturation = hash % 50;
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
 export const themeManager = ThemeManager.getInstance();

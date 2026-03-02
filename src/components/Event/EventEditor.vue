@@ -98,13 +98,7 @@
 
         <div class="form-group">
           <label for="category">分类</label>
-          <select id="category" v-model="formData.categories">
-            <option value="">无分类</option>
-            <option value="工作">工作</option>
-            <option value="个人">个人</option>
-            <option value="重要">重要</option>
-            <option value="会议">会议</option>
-          </select>
+          <input id="category" v-model="formData.categories" />
         </div>
 
         <div class="form-actions">

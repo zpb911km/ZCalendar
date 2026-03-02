@@ -1,7 +1,7 @@
 use chrono::{DateTime, Duration, FixedOffset, NaiveDateTime, Utc};
 use ical::parser::ical::IcalParser;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Row, SqlitePool};
+use sqlx::{FromRow, Row, MySqlPool};
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_notification::NotificationExt;
 use tokio::spawn;
@@ -12,12 +12,12 @@ struct Event {
     id: i32,
     title: String,
     description: Option<String>,
-    start: DateTime<Utc>,
-    end: DateTime<Utc>,
+    start: String,
+    end: String,
     all_day: bool,
     reminder_minutes: i32,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    created_at: String,
+    updated_at: String,
     recurrence_rule: Option<String>,
     recurrence_id: Option<String>,
     sequence: i32,
@@ -37,8 +37,8 @@ struct Calendar {
     name: String,
     color: String,
     is_primary: bool,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    created_at: String,
+    updated_at: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -77,7 +77,7 @@ struct UpdateEventDto {
 }
 
 #[tauri::command]
-async fn get_all_events(pool: tauri::State<'_, SqlitePool>) -> Result<Vec<Event>, String> {
+async fn get_all_events(pool: tauri::State<'_, MySqlPool>) -> Result<Vec<Event>, String> {
     let query = "SELECT id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id FROM events ORDER BY start";
     let rows = sqlx::query_as::<_, Event>(query)
         .fetch_all(&*pool)
@@ -89,7 +89,7 @@ async fn get_all_events(pool: tauri::State<'_, SqlitePool>) -> Result<Vec<Event>
 
 #[tauri::command]
 async fn get_events_by_date(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     date: String,
 ) -> Result<Vec<Event>, String> {
     let date_start = format!("{} 00:00:00", date.split('T').next().unwrap_or(&date));
@@ -108,7 +108,7 @@ async fn get_events_by_date(
 
 #[tauri::command]
 async fn get_event_by_id(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     id: i32,
 ) -> Result<Option<Event>, String> {
     let query = "SELECT id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id FROM events WHERE id = ?";
@@ -123,14 +123,17 @@ async fn get_event_by_id(
 
 #[tauri::command]
 async fn create_event(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     event: CreateEventDto,
 ) -> Result<Event, String> {
     let now = Utc::now();
     let status = event.status.unwrap_or_else(|| "CONFIRMED".to_string());
 
-    let query = "INSERT INTO events (title, description, start, end, all_day, reminder_minutes, created_at, updated_at, sequence, status, location, url, categories, priority, calendar_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?) RETURNING id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id";
-    let new_event = sqlx::query_as::<_, Event>(query)
+    // MySQL 不支持 RETURNING，需要分两步：先插入，再查询
+    let insert_query = "INSERT INTO events (title, description, start, end, all_day, reminder_minutes, created_at, updated_at, sequence, status, location, url, categories, priority, calendar_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)";
+
+    let last_id;
+    match sqlx::query(insert_query)
         .bind(&event.title)
         .bind(&event.description)
         .bind(&event.start)
@@ -145,16 +148,33 @@ async fn create_event(
         .bind(&event.categories)
         .bind(event.priority)
         .bind(&event.calendar_id)
+        .execute(&*pool)
+        .await
+    {
+        Ok(i) => {
+            last_id = i.last_insert_id();
+        },
+        Err(e) => {
+            return Err(format!("插入事件失败: {}", e));
+        }
+    }
+
+    // 查询完整记录
+    let select_query = "SELECT id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id FROM events WHERE id = ?";
+
+    match sqlx::query_as::<_, Event>(select_query)
+        .bind(last_id)
         .fetch_one(&*pool)
         .await
-        .map_err(|e| e.to_string())?;
-
-    Ok(new_event)
+    {
+        Ok(event) => Ok(event),
+        Err(e) => Err(format!("查询事件失败 (ID: {}): {}", last_id, e)),
+    }
 }
 
 #[tauri::command]
 async fn update_event(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     event: UpdateEventDto,
 ) -> Result<Event, String> {
     let mut query_builder = sqlx::QueryBuilder::new("UPDATE events SET updated_at = ");
@@ -215,10 +235,18 @@ async fn update_event(
 
     query_builder.push(" WHERE id = ");
     query_builder.push_bind(event.id);
-    query_builder.push(" RETURNING id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id");
 
-    let updated_event = query_builder
-        .build_query_as::<Event>()
+    // 执行更新
+    query_builder
+        .build()
+        .execute(&*pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 查询更新后的记录
+    let select_query = "SELECT id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id FROM events WHERE id = ?";
+    let updated_event = sqlx::query_as::<_, Event>(select_query)
+        .bind(event.id)
         .fetch_one(&*pool)
         .await
         .map_err(|e| e.to_string())?;
@@ -227,7 +255,7 @@ async fn update_event(
 }
 
 #[tauri::command]
-async fn delete_event(pool: tauri::State<'_, SqlitePool>, id: i32) -> Result<(), String> {
+async fn delete_event(pool: tauri::State<'_, MySqlPool>, id: i32) -> Result<(), String> {
     let query = "DELETE FROM events WHERE id = ?";
     sqlx::query(query)
         .bind(id)
@@ -239,7 +267,7 @@ async fn delete_event(pool: tauri::State<'_, SqlitePool>, id: i32) -> Result<(),
 }
 
 #[tauri::command]
-async fn delete_all_events(pool: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+async fn delete_all_events(pool: tauri::State<'_, MySqlPool>) -> Result<(), String> {
     sqlx::query("DELETE FROM events")
         .execute(&*pool)
         .await
@@ -250,7 +278,7 @@ async fn delete_all_events(pool: tauri::State<'_, SqlitePool>) -> Result<(), Str
 
 #[tauri::command]
 async fn get_events_in_range(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     start: String,
     end: String,
 ) -> Result<Vec<Event>, String> {
@@ -267,7 +295,7 @@ async fn get_events_in_range(
 
 #[tauri::command]
 async fn import_ical(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     ical_content: String,
     timezone_offset: Option<i32>,
 ) -> Result<Vec<Event>, String> {
@@ -290,42 +318,85 @@ async fn import_ical(
             let mut priority: Option<i32> = None;
             let mut status: Option<String> = None;
             let mut recurrence_rule: Option<String> = None;
+            let mut reminder_minutes: i32 = 15; // 默认提醒时间 15 分钟
 
             // 处理事件属性
             for property in &event.properties {
+                let rpl = |s: String| 
+                    s.replace("\\n", "\n")
+                    .replace("\\N", "\n")
+                    .replace("\\;", ";")
+                    .replace("\\,", ",")
+                    .replace("\\\\", "\\")
+                    .replace("，", ",");
                 match property.name.as_str() {
-                    "SUMMARY" => title = property.value.clone().unwrap_or_default(),
-                    "DESCRIPTION" => description = property.value.clone(),
+                    "SUMMARY" => title = property.value.clone().unwrap_or_default().replace("\\n", "\n"),
+                    "DESCRIPTION" => description = property.value.clone().map(rpl),
                     "DTSTART" => start = property.value.clone(),
                     "DTEND" => end = property.value.clone(),
-                    "LOCATION" => location = property.value.clone(),
+                    "LOCATION" => location = property.value.clone().map(rpl),
                     "URL" => url = property.value.clone(),
-                    "CATEGORIES" => categories = property.value.clone(),
+                    "CATEGORIES" => categories = property.value.clone().map(rpl),
                     "PRIORITY" => {
                         if let Some(ref p) = property.value {
                             priority = p.parse::<i32>().ok();
                         }
                     }
-                    "STATUS" => status = property.value.clone(),
-                    "RRULE" => recurrence_rule = property.value.clone(),
-                    _ => {}
+                    "STATUS" => status = property.value.clone().map(rpl),
+                    "RRULE" => recurrence_rule = property.value.clone().map(rpl),
+                    _ => {
+                        println!("未知属性：{} = {:?}", property.name, property.value);
+                    }
+                }
+            }
+            
+            
+
+            // 处理提醒（VALARM 组件）
+            for alarm in &event.alarms {
+                for property in &alarm.properties {
+                    if property.name.as_str() == "TRIGGER" {
+                        if let Some(ref trigger_value) = property.value {
+                            // 解析 TRIGGER 值，例如 "-PT15M" 表示提前 15 分钟
+                            if trigger_value.starts_with("-PT") && trigger_value.ends_with("M") {
+                                let minutes_str = trigger_value.strip_prefix("-PT")
+                                    .and_then(|s| s.strip_suffix("M"))
+                                    .unwrap_or("15");
+                                if let Ok(minutes) = minutes_str.parse::<i32>() {
+                                    reminder_minutes = minutes;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
             if let (Some(start_str), Some(end_str)) = (start, end) {
-                // 使用带时区偏移的解析函数
-                let start_dt = parse_ical_datetime_with_offset(&start_str, timezone_offset_hours)
-                    .unwrap_or_else(|_| Utc::now());
-                let end_dt = parse_ical_datetime_with_offset(&end_str, timezone_offset_hours)
-                    .unwrap_or_else(|_| Utc::now());
+                // 使用带时区偏移的解析函数，并检测是否解析失败
+                let start_dt_result = parse_ical_datetime_with_offset(&start_str, timezone_offset_hours);
+                let end_dt_result = parse_ical_datetime_with_offset(&end_str, timezone_offset_hours);
+
+                let start_dt = start_dt_result.clone().unwrap_or_else(|_| Utc::now());
+                let end_dt = end_dt_result.clone().unwrap_or_else(|_| Utc::now());
+
+                // 检查是否有日期解析失败，如果有则在标题前添加警告标志
+                let final_title = if start_dt_result.is_err() || end_dt_result.is_err() {
+                    if title.is_empty() {
+                        "⚠️ 事件".to_string()
+                    } else {
+                        format!("⚠️ {}", title)
+                    }
+                } else {
+                    title
+                };
 
                 let create_event_dto = CreateEventDto {
-                    title,
+                    title: final_title,
                     description,
                     start: start_dt.to_rfc3339(),
                     end: end_dt.to_rfc3339(),
                     all_day: start_str.len() == 8, // ical日期格式为 YYYYMMDD 表示全天事件
-                    reminder_minutes: 15,          // 默认提醒时间
+                    reminder_minutes,
                     recurrence_rule,
                     location,
                     url,
@@ -346,7 +417,7 @@ async fn import_ical(
 
 #[tauri::command]
 async fn export_ical(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     event_ids: Option<Vec<i32>>,
     timezone_offset: Option<i32>,
 ) -> Result<String, String> {
@@ -373,16 +444,12 @@ async fn export_ical(
                     id: row.get("id"),
                     title: row.get("title"),
                     description: row.get("description"),
-                    start: parse_datetime(&row.get::<String, &str>("start"))
-                        .unwrap_or_else(|_| Utc::now()),
-                    end: parse_datetime(&row.get::<String, &str>("end"))
-                        .unwrap_or_else(|_| Utc::now()),
+                    start: row.get("start"),
+                    end: row.get("end"),
                     all_day: row.get("all_day"),
                     reminder_minutes: row.get("reminder_minutes"),
-                    created_at: parse_datetime(&row.get::<String, &str>("created_at"))
-                        .unwrap_or_else(|_| Utc::now()),
-                    updated_at: parse_datetime(&row.get::<String, &str>("updated_at"))
-                        .unwrap_or_else(|_| Utc::now()),
+                    created_at: row.get("created_at"),
+                    updated_at: row.get("updated_at"),
                     recurrence_rule: row.get("recurrence_rule"),
                     recurrence_id: row.get("recurrence_id"),
                     sequence: row.get("sequence"),
@@ -483,6 +550,17 @@ async fn export_ical(
             ical_content.push_str(&format!("RRULE:{}\n", escape_ical_text(rrule)));
         }
 
+        // 提醒（VALARM 组件）
+        if event.reminder_minutes > 0 {
+            ical_content.push_str("BEGIN:VALARM\n");
+            ical_content.push_str("TRIGGER:-PT");
+            ical_content.push_str(&event.reminder_minutes.to_string());
+            ical_content.push_str("M\n");
+            ical_content.push_str("ACTION:DISPLAY\n");
+            ical_content.push_str("DESCRIPTION:Reminder\n");
+            ical_content.push_str("END:VALARM\n");
+        }
+
         ical_content.push_str("END:VEVENT\n");
     }
 
@@ -547,7 +625,7 @@ async fn save_file_to_downloads(app_handle: tauri::AppHandle, content: String, f
 
 #[tauri::command]
 async fn search_events(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     query: String,
 ) -> Result<Vec<Event>, String> {
     let search_query = format!("%{}%", query);
@@ -566,7 +644,7 @@ async fn search_events(
 
 #[tauri::command]
 async fn get_upcoming_events(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     limit: i32,
 ) -> Result<Vec<Event>, String> {
     let query = "SELECT id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id FROM events WHERE start >= ? ORDER BY start LIMIT ?";
@@ -583,7 +661,7 @@ async fn get_upcoming_events(
 }
 
 #[tauri::command]
-async fn get_all_calendars(pool: tauri::State<'_, SqlitePool>) -> Result<Vec<Calendar>, String> {
+async fn get_all_calendars(pool: tauri::State<'_, MySqlPool>) -> Result<Vec<Calendar>, String> {
     let query =
         "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars ORDER BY name";
     let rows = sqlx::query_as::<_, Calendar>(query)
@@ -596,18 +674,26 @@ async fn get_all_calendars(pool: tauri::State<'_, SqlitePool>) -> Result<Vec<Cal
 
 #[tauri::command]
 async fn create_calendar(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     calendar: Calendar,
 ) -> Result<Calendar, String> {
     let now = Utc::now();
-    let query = "INSERT INTO calendars (id, name, color, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, name, color, is_primary, created_at, updated_at";
-    let new_calendar = sqlx::query_as::<_, Calendar>(query)
+    let insert_query = "INSERT INTO calendars (id, name, color, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
+    sqlx::query(insert_query)
         .bind(&calendar.id)
         .bind(&calendar.name)
         .bind(&calendar.color)
         .bind(calendar.is_primary)
         .bind(&now.to_rfc3339())
         .bind(&now.to_rfc3339())
+        .execute(&*pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 查询插入的记录
+    let select_query = "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars WHERE id = ?";
+    let new_calendar = sqlx::query_as::<_, Calendar>(select_query)
+        .bind(&calendar.id)
         .fetch_one(&*pool)
         .await
         .map_err(|e| e.to_string())?;
@@ -616,7 +702,7 @@ async fn create_calendar(
 
 #[tauri::command]
 async fn get_calendar_by_id(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     id: String,
 ) -> Result<Option<Calendar>, String> {
     let query =
@@ -632,17 +718,24 @@ async fn get_calendar_by_id(
 
 #[tauri::command]
 async fn update_calendar(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     calendar: Calendar,
 ) -> Result<Calendar, String> {
     let now = Utc::now();
-    let query = "UPDATE calendars SET name = ?, color = ?, is_primary = ?, updated_at = ? WHERE id = ? RETURNING id, name, color, is_primary, created_at, updated_at";
-
-    let updated_calendar = sqlx::query_as::<_, Calendar>(query)
+    let update_query = "UPDATE calendars SET name = ?, color = ?, is_primary = ?, updated_at = ? WHERE id = ?";
+    sqlx::query(update_query)
         .bind(&calendar.name)
         .bind(&calendar.color)
         .bind(calendar.is_primary)
         .bind(&now.to_rfc3339())
+        .bind(&calendar.id)
+        .execute(&*pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 查询更新后的记录
+    let select_query = "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars WHERE id = ?";
+    let updated_calendar = sqlx::query_as::<_, Calendar>(select_query)
         .bind(&calendar.id)
         .fetch_one(&*pool)
         .await
@@ -652,7 +745,7 @@ async fn update_calendar(
 }
 
 #[tauri::command]
-async fn delete_calendar(pool: tauri::State<'_, SqlitePool>, id: String) -> Result<(), String> {
+async fn delete_calendar(pool: tauri::State<'_, MySqlPool>, id: String) -> Result<(), String> {
     let query = "DELETE FROM calendars WHERE id = ?";
     sqlx::query(query)
         .bind(&id)
@@ -665,7 +758,7 @@ async fn delete_calendar(pool: tauri::State<'_, SqlitePool>, id: String) -> Resu
 
 #[tauri::command]
 async fn get_calendar_events(
-    pool: tauri::State<'_, SqlitePool>,
+    pool: tauri::State<'_, MySqlPool>,
     calendar_id: String,
 ) -> Result<Vec<Event>, String> {
     let query = "SELECT id, title, description, start, end, all_day, reminder_minutes, created_at, updated_at, recurrence_rule, recurrence_id, sequence, status, location, organizer, attendees, url, categories, priority, calendar_id FROM events WHERE calendar_id = ? ORDER BY start";
@@ -719,7 +812,9 @@ fn parse_ical_datetime_with_offset(s: &str, offset_hours: i32) -> Result<DateTim
     }
 }
 
-fn format_ical_datetime_with_offset(dt: &DateTime<Utc>, offset_hours: i32) -> String {
+fn format_ical_datetime_with_offset(dt_str: &str, offset_hours: i32) -> String {
+    // 解析字符串为 DateTime
+    let dt = parse_datetime(dt_str).unwrap_or_else(|_| Utc::now());
     // 创建时区偏移
     let offset = FixedOffset::east_opt(offset_hours * 3600)
         .unwrap_or_else(|| FixedOffset::east_opt(0).unwrap());
@@ -728,7 +823,9 @@ fn format_ical_datetime_with_offset(dt: &DateTime<Utc>, offset_hours: i32) -> St
     local_time.format("%Y%m%dT%H%M%S").to_string()
 }
 
-fn format_ical_date(dt: &DateTime<Utc>) -> String {
+fn format_ical_date(dt_str: &str) -> String {
+    // 解析字符串为 DateTime
+    let dt = parse_datetime(dt_str).unwrap_or_else(|_| Utc::now());
     dt.date_naive().format("%Y%m%d").to_string()
 }
 
@@ -741,7 +838,7 @@ fn escape_ical_text(s: &str) -> String {
 }
 
 // 提醒服务相关函数
-async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: SqlitePool) {
+async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: MySqlPool) {
     // 初始化Android通知渠道
     // #[cfg(target_os = "android")]
     // {
@@ -772,7 +869,7 @@ async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: Sqli
     });
 }
 
-async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &SqlitePool) {
+async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &MySqlPool) {
     let now = Utc::now();
     // send_heartbeat_notification(app_handle).await;
     // 查询未来1分钟内需要提醒的事件
@@ -785,9 +882,11 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &Sql
         .unwrap_or_default();
     // println!("find {} upcoming events at {}", upcoming_events.len(), now.to_rfc3339());
     for event in upcoming_events {
+        // 解析事件开始时间
+        let event_start = parse_datetime(&event.start).unwrap_or_else(|_| Utc::now());
         // 计算事件开始时间与当前时间的差值
         let reminder_minutes = event.reminder_minutes;
-        let time_diff = event.start - now - Duration::minutes(reminder_minutes as i64);
+        let time_diff = event_start - now - Duration::minutes(reminder_minutes as i64);
         let mut minutes_diff = time_diff.num_minutes();
         if minutes_diff < 0 {
             minutes_diff = -minutes_diff; // abs
@@ -805,7 +904,9 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &Sql
 async fn send_reminder_notification<R: Runtime>(app_handle: &AppHandle<R>, event: &Event) {
     let title = format!("事件提醒: {}", event.title);
     let description = event.description.clone().unwrap_or_default();
-    let start_time = event.start.format("%H:%M").to_string();
+    // 解析 start 时间字符串为 DateTime，然后格式化
+    let start_dt = parse_datetime(&event.start).unwrap_or_else(|_| Utc::now());
+    let start_time = start_dt.format("%H:%M").to_string();
 
     let body = if description.is_empty() {
         format!("时间: {}", start_time)
@@ -849,39 +950,24 @@ pub fn run() {
             // 创建数据库连接池
             tauri::async_runtime::block_on(async {
                 let app_handle = app.handle();
-                // 获取应用数据目录并构建数据库路径
-                let app_dir = match app_handle.path().app_data_dir() {
-                    Ok(dir) => dir,
-                    Err(_) => {
-                        // 如果无法获取app_data_dir，则使用当前工作目录
-                        std::env::current_dir().unwrap().join("app_data")
-                    }
-                };
-                let db_dir = app_dir.join("database");
-                let db_path = db_dir.join("zcalendar.db");
+                // MySQL 数据库连接配置
+                let db_url = "mysql://zcalendar_user:zcalendar@103.151.217.252:3306/zcalendar";
 
-                // 确保数据库目录存在
-                std::fs::create_dir_all(&db_dir).expect("Failed to create database directory");
+                println!("Database URL: {}", db_url);
 
-                // 验证数据库路径是否可写入
-                let db_path_str = db_path.to_string_lossy().to_string();
-                println!("Database path: {}", db_path_str);
-                if std::fs::File::open(&db_path).is_err() {
-                    // 如果文件不存在，尝试创建一个空文件
-                    std::fs::File::create(&db_path).expect("Failed to create database file");
-                }
-
-                let db_url = format!("sqlite:{}", db_path_str);
-
-                let pool = SqlitePool::connect(&db_url)
+                // 配置连接池以优化性能
+                let pool = sqlx::mysql::MySqlPoolOptions::new()
+                    .max_connections(10)
+                    .min_connections(2)
+                    .acquire_timeout(std::time::Duration::from_secs(30))
+                    .idle_timeout(std::time::Duration::from_secs(600))
+                    .max_lifetime(std::time::Duration::from_secs(1800))
+                    .connect(db_url)
                     .await
                     .expect("Failed to connect to database");
 
-                // 创建数据表
-                sqlx::migrate!("./migrations")
-                    .run(&pool)
-                    .await
-                    .expect("Failed to run migrations");
+                // 注意：不再使用自动迁移，需要在 MySQL 中手动创建表
+                // 请执行 src-tauri/migrations/001_create_calendars_and_events_table.sql 中的 SQL 语句
 
                 // 启动提醒服务
                 spawn(start_reminder_service(app_handle.clone(), pool.clone()));

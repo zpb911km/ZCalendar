@@ -58,6 +58,7 @@
 import { computed } from 'vue';
 import { dateUtils } from '@/utils/dateUtils';
 import { CalendarEvent } from '@/types/event';
+import { generateHslColorB } from '@/utils/themeManager';
 
 // 确保日期字段是Date对象
 const ensureDate = (date: string | Date): Date => {
@@ -116,7 +117,7 @@ const getEventBackgroundColor = (event: CalendarEvent) => {
   } else if (event.categories?.includes('会议')) {
     return 'var(--event-meeting-background-color)';
   } else {
-    return 'var(--event-default-background-color)';
+    return generateHslColorB(event.title);
   }
 };
 

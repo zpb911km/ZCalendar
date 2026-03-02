@@ -203,6 +203,7 @@ import { calendarService } from '@/services/calendarService';
 import { Calendar } from '@/types/calendar';
 import { invoke } from '@tauri-apps/api/core';
 import { themeManager } from '@/utils/themeManager';
+import router from '@/router';
 
 // 设置状态
 const theme = ref('auto');
@@ -408,7 +409,6 @@ const importEvents = async () => {
   // 打开文件选择对话框
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.ics';
   input.onchange = async (event: any) => {
     const file = event.target.files[0];
     if (file) {
@@ -420,16 +420,17 @@ const importEvents = async () => {
         console.log(content);
         console.log(timezoneOffsetValue);
         // return;
-        await invoke('import_ical', {
+        const newevents: Event[] = await invoke('import_ical', {
           icalContent: content,
           timezoneOffset: parseInt(timezoneOffsetValue),
         });
         await invoke('send_notification', {
           title: '日历已导入',
-          body: '日历导入成功',
+          body: `日历导入成功, 共${newevents.length}条`,
         });
         // 重新加载日历列表
         loadCalendars();
+        router.push('/');
       } catch (error) {
         console.error('导入事件失败:', error);
         alert('导入事件失败，请检查文件格式');
