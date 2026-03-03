@@ -1,8 +1,8 @@
 -- 创建日历表
 CREATE TABLE calendars (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-    color TEXT NOT NULL,
+    id VARCHAR(255) PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    color VARCHAR(255) NOT NULL,
     is_primary BOOLEAN NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -10,26 +10,26 @@ CREATE TABLE calendars (
 
 -- 创建事件表
 CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
     description TEXT,
-    start TEXT NOT NULL,
-    end TEXT NOT NULL,
+    start VARCHAR(255) NOT NULL,
+    end VARCHAR(255) NOT NULL,
     all_day BOOLEAN NOT NULL DEFAULT 0,
-    reminder_minutes INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
+    reminder_minutes INT NOT NULL DEFAULT 0,
+    created_at VARCHAR(255) NOT NULL,
+    updated_at VARCHAR(255) NOT NULL,
     recurrence_rule TEXT,
-    recurrence_id TEXT,
-    sequence INTEGER NOT NULL DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'CONFIRMED',
-    location TEXT,
-    organizer TEXT,
+    recurrence_id VARCHAR(255),
+    sequence INT NOT NULL DEFAULT 0,
+    status VARCHAR(50) NOT NULL DEFAULT 'CONFIRMED',
+    location VARCHAR(255),
+    organizer VARCHAR(255),
     attendees TEXT,
-    url TEXT,
-    categories TEXT,
-    priority INTEGER,
-    calendar_id TEXT,
+    url VARCHAR(255),
+    categories VARCHAR(255),
+    priority INT,
+    calendar_id VARCHAR(255),
     FOREIGN KEY (calendar_id) REFERENCES calendars (id) ON DELETE SET NULL
 );
 

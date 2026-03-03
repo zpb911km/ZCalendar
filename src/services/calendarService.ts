@@ -1,5 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Calendar } from '../types/calendar';
+import { useLoading } from '../composables/useLoading';
+
+const { withLoading } = useLoading();
 
 // 内部辅助函数
 const convertCalendarToBackend = (calendar: any): any => {
@@ -33,46 +36,58 @@ const convertCalendarFromBackend = (backendCalendar: any): Calendar => {
 export const calendarService = {
   // 获取所有日历
   async getAllCalendars(): Promise<Calendar[]> {
-    const result = await invoke<any[]>('get_all_calendars');
-    return result.map(convertCalendarFromBackend);
+    return withLoading(async () => {
+      const result = await invoke<any[]>('get_all_calendars');
+      return result.map(convertCalendarFromBackend);
+    });
   },
 
   // 创建日历
   async createCalendar(calendar: Calendar): Promise<Calendar> {
-    // 确保isPrimary有默认值
-    const calendarWithDefaults = {
-      ...calendar,
-      isPrimary: calendar.is_primary ?? false,
-    };
-    const backendCalendar = convertCalendarToBackend(calendarWithDefaults);
-    const result = await invoke<any>('create_calendar', {
-      calendar: backendCalendar,
+    return withLoading(async () => {
+      // 确保isPrimary有默认值
+      const calendarWithDefaults = {
+        ...calendar,
+        isPrimary: calendar.is_primary ?? false,
+      };
+      const backendCalendar = convertCalendarToBackend(calendarWithDefaults);
+      const result = await invoke<any>('create_calendar', {
+        calendar: backendCalendar,
+      });
+      return convertCalendarFromBackend(result);
     });
-    return convertCalendarFromBackend(result);
   },
 
   // 获取日历详情
   async getCalendarById(id: string): Promise<Calendar | null> {
-    const result = await invoke<any | null>('get_calendar_by_id', { id });
-    return result ? convertCalendarFromBackend(result) : null;
+    return withLoading(async () => {
+      const result = await invoke<any | null>('get_calendar_by_id', { id });
+      return result ? convertCalendarFromBackend(result) : null;
+    });
   },
 
   // 更新日历
   async updateCalendar(calendar: Calendar): Promise<Calendar> {
-    const backendCalendar = convertCalendarToBackend(calendar);
-    const result = await invoke<any>('update_calendar', {
-      calendar: backendCalendar,
+    return withLoading(async () => {
+      const backendCalendar = convertCalendarToBackend(calendar);
+      const result = await invoke<any>('update_calendar', {
+        calendar: backendCalendar,
+      });
+      return convertCalendarFromBackend(result);
     });
-    return convertCalendarFromBackend(result);
   },
 
   // 删除日历
   async deleteCalendar(id: string): Promise<void> {
-    await invoke('delete_calendar', { id });
+    return withLoading(async () => {
+      await invoke('delete_calendar', { id });
+    });
   },
 
   // 获取日历事件
   async getCalendarEvents(calendarId: string): Promise<any[]> {
-    return await invoke('get_calendar_events', { calendarId });
+    return withLoading(async () => {
+      return await invoke('get_calendar_events', { calendarId });
+    });
   },
 };

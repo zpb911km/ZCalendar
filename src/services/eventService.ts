@@ -1,5 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { CalendarEvent, CreateEventDto, UpdateEventDto } from '../types/event';
+import { useLoading } from '../composables/useLoading';
+
+const { withLoading } = useLoading();
 
 // 内部辅助函数
 const convertIdToBackend = (id: number): number => {
@@ -78,67 +81,89 @@ export interface EventService {
 
 export class EventServiceImpl implements EventService {
   async getAllEvents(): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('get_all_events');
-    // 将后端返回的数据转换为前端类型
-    return result.map(convertEventFromBackend);
+    return withLoading(async () => {
+      const result = await invoke<any[]>('get_all_events');
+      // 将后端返回的数据转换为前端类型
+      return result.map(convertEventFromBackend);
+    });
   }
 
   async getEventsByDate(date: Date): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('get_events_by_date', {
-      date: convertDateToBackend(date),
+    return withLoading(async () => {
+      const result = await invoke<any[]>('get_events_by_date', {
+        date: convertDateToBackend(date),
+      });
+      return result.map(convertEventFromBackend);
     });
-    return result.map(convertEventFromBackend);
   }
 
   async getEventById(id: number): Promise<CalendarEvent | null> {
-    const result = await invoke<any | null>('get_event_by_id', {
-      id: convertIdToBackend(id),
+    return withLoading(async () => {
+      const result = await invoke<any | null>('get_event_by_id', {
+        id: convertIdToBackend(id),
+      });
+      return result ? convertEventFromBackend(result) : null;
     });
-    return result ? convertEventFromBackend(result) : null;
   }
 
   async createEvent(event: CreateEventDto): Promise<CalendarEvent> {
-    const backendEvent = convertEventToBackend(event);
-    const result = await invoke<any>('create_event', { event: backendEvent });
-    return convertEventFromBackend(result);
+    return withLoading(async () => {
+      const backendEvent = convertEventToBackend(event);
+      const result = await invoke<any>('create_event', { event: backendEvent });
+      return convertEventFromBackend(result);
+    });
   }
 
   async updateEvent(event: UpdateEventDto): Promise<CalendarEvent> {
-    const backendEvent = convertEventToBackend(event);
-    const result = await invoke<any>('update_event', { event: backendEvent });
-    return convertEventFromBackend(result);
+    return withLoading(async () => {
+      const backendEvent = convertEventToBackend(event);
+      const result = await invoke<any>('update_event', { event: backendEvent });
+      return convertEventFromBackend(result);
+    });
   }
 
   async deleteEvent(id: number): Promise<void> {
-    await invoke('delete_event', { id: convertIdToBackend(id) });
+    return withLoading(async () => {
+      await invoke('delete_event', { id: convertIdToBackend(id) });
+    });
   }
 
   async getEventsInRange(start: Date, end: Date): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('get_events_in_range', {
-      start: convertDateToBackend(start),
-      end: convertDateToBackend(end),
+    return withLoading(async () => {
+      const result = await invoke<any[]>('get_events_in_range', {
+        start: convertDateToBackend(start),
+        end: convertDateToBackend(end),
+      });
+      return result.map(convertEventFromBackend);
     });
-    return result.map(convertEventFromBackend);
   }
 
   async importIcal(icalContent: string): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('import_ical', { icalContent });
-    return result.map(convertEventFromBackend);
+    return withLoading(async () => {
+      const result = await invoke<any[]>('import_ical', { icalContent });
+      return result.map(convertEventFromBackend);
+    });
   }
 
   async exportIcal(eventIds?: number[]): Promise<string> {
-    return await invoke('export_ical', {
-      eventIds: eventIds?.map(id => convertIdToBackend(id)) || null,
+    return withLoading(async () => {
+      return await invoke('export_ical', {
+        eventIds: eventIds?.map(id => convertIdToBackend(id)) || null,
+      });
     });
   }
 
   async searchEvents(query: string): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('search_events', { query });
-    return result.map(convertEventFromBackend);
+    return withLoading(async () => {
+      const result = await invoke<any[]>('search_events', { query });
+      return result.map(convertEventFromBackend);
+    });
   }
 
   async getUpcomingEvents(limit: number): Promise<CalendarEvent[]> {
-    const result = await invoke<any[]>('get_upcoming_events', { limit });
-    return result.map(convertEventFromBackend);
+    return withLoading(async () => {
+      const result = await invoke<any[]>('get_upcoming_events', { limit });
+      return result.map(convertEventFromBackend);
+    });
   }
 }

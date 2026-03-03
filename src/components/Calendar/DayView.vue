@@ -278,6 +278,9 @@ const onTimeSlotClick = (time: Date) => {
   cursor: pointer;
   transition: transform 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 0; /* 允许 flex 子项缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
+  flex-shrink: 1; /* 允许收缩 */
 }
 
 .event-item:hover {
@@ -292,6 +295,8 @@ const onTimeSlotClick = (time: Date) => {
   flex-direction: column;
   justify-content: center;
   padding: 4px;
+  min-width: 0; /* 允许 flex 子项缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
 }
 
 .event-title {
@@ -300,6 +305,8 @@ const onTimeSlotClick = (time: Date) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0; /* 允许文本容器缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
 }
 
 .event-time {

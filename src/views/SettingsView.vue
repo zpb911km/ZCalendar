@@ -204,6 +204,7 @@ import { Calendar } from '@/types/calendar';
 import { invoke } from '@tauri-apps/api/core';
 import { themeManager } from '@/utils/themeManager';
 import router from '@/router';
+import { useLoading } from '@/composables/useLoading';
 
 // 设置状态
 const theme = ref('auto');
@@ -339,7 +340,9 @@ const updateTimezone = () => {
 // };
 
 const exportAllEvents = async () => {
+  const { showLoading, hideLoading } = useLoading();
   try {
+    showLoading();
     // 获取当前时区设置
     const timezoneOffsetValue = localStorage.getItem('timezoneOffset') || '8';
     // 调用后端导出功能，传递时区信息
@@ -402,10 +405,13 @@ const exportAllEvents = async () => {
   } catch (error) {
     console.error('导出事件失败:', error);
     alert('导出事件失败，请重试');
+  } finally {
+    hideLoading();
   }
 };
 
 const importEvents = async () => {
+  const { showLoading, hideLoading } = useLoading();
   // 打开文件选择对话框
   const input = document.createElement('input');
   input.type = 'file';
@@ -413,6 +419,7 @@ const importEvents = async () => {
     const file = event.target.files[0];
     if (file) {
       try {
+        showLoading();
         const content = await file.text();
         // 获取当前时区设置并传递给后端导入功能
         const timezoneOffsetValue =
@@ -434,6 +441,8 @@ const importEvents = async () => {
       } catch (error) {
         console.error('导入事件失败:', error);
         alert('导入事件失败，请检查文件格式');
+      } finally {
+        hideLoading();
       }
     }
   };
@@ -442,12 +451,16 @@ const importEvents = async () => {
 
 const clearAllEvents = async () => {
   if (confirm('确定要清空所有事件吗？此操作不可撤销。')) {
+    const { showLoading, hideLoading } = useLoading();
     try {
-      invoke('delete_all_events');
+      showLoading();
+      await invoke('delete_all_events');
       alert('所有事件已清空');
     } catch (error) {
       console.error('清空事件失败:', error);
       alert('清空事件失败，请重试');
+    } finally {
+      hideLoading();
     }
   }
 };

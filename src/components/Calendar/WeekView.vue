@@ -33,21 +33,6 @@
           class="time-slot"
           @click="onTimeSlotClick(day.date, timeSlot.time)"
         >
-          <!-- 事件 -->
-          <!-- <div
-            v-for="event in getEventsForTimeSlot(day.date, timeSlot.time)"
-            :key="event.id"
-            class="event-item"
-            :style="getEventStyle(event, day.date)"
-            @click.stop="onEventClick(event)"
-          >
-            <div class="event-content">
-              <div class="event-title">{{ event.title }}</div>
-              <div v-if="!event.all_day" class="event-time">
-                {{ formatTime(ensureDate(event.start)) }} - {{ formatTime(ensureDate(event.end)) }}
-              </div>
-            </div>
-          </div> -->
           <div
             v-if="getEventsForTimeSlot(day.date, timeSlot.time).length > 0"
             class="event-item"
@@ -303,6 +288,7 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   min-height: 60px; /* 每小时60px */
   border-bottom: 1px solid var(--border-color);
   position: relative;
+  overflow: hidden; /* 防止内容溢出 */
 }
 
 .time-label {
@@ -323,6 +309,8 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   position: relative;
   border-right: 1px solid var(--border-color);
   cursor: pointer;
+  overflow: hidden; /* 防止内容溢出 */
+  min-width: 0; /* 允许 flex 子项缩小 */
 }
 
 .time-slot:hover {
@@ -334,6 +322,10 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   box-sizing: border-box;
   cursor: pointer;
   transition: transform 0.2s ease;
+  min-width: 0; /* 允许 flex 子项缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
+  flex-shrink: 1; /* 允许收缩 */
+  width: 100%; /* 确保宽度填满 */
 }
 
 .event-item:hover {
@@ -347,6 +339,8 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   flex-direction: column;
   justify-content: center;
   padding: 2px;
+  min-width: 0; /* 允许 flex 子项缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
 }
 
 .event-title {
@@ -355,6 +349,8 @@ const onTimeSlotClick = (date: Date, time: Date) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0; /* 允许文本容器缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
 }
 
 .event-time {

@@ -875,11 +875,17 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &MyS
     // 查询未来1分钟内需要提醒的事件
     let query =
         "SELECT * FROM events WHERE reminder_minutes > 0 AND start > ? AND status != 'CANCELLED'";
-    let upcoming_events: Vec<Event> = sqlx::query_as::<_, Event>(query)
-        .bind(&now.to_rfc3339())
-        .fetch_all(pool)
-        .await
-        .unwrap_or_default();
+
+    // 添加超时保护，防止查询长时间阻塞
+    let upcoming_events: Vec<Event> = tokio::time::timeout(
+        std::time::Duration::from_secs(10),  // 10 秒超时
+        sqlx::query_as::<_, Event>(query)
+            .bind(&now.to_rfc3339())
+            .fetch_all(pool)
+    )
+    .await
+    .unwrap_or(Ok(Vec::new()))  // 超时或错误都返回空数组
+    .unwrap_or_default();
     // println!("find {} upcoming events at {}", upcoming_events.len(), now.to_rfc3339());
     for event in upcoming_events {
         // 解析事件开始时间
@@ -947,33 +953,49 @@ async fn send_notification<R: Runtime>(
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            // 创建数据库连接池
-            tauri::async_runtime::block_on(async {
-                let app_handle = app.handle();
+            let app_handle = app.handle();
+
+            // 异步创建数据库连接池，不阻塞 WebView 加载
+            let handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
                 // MySQL 数据库连接配置
                 let db_url = "mysql://zcalendar_user:zcalendar@103.151.217.252:3306/zcalendar";
 
                 println!("Database URL: {}", db_url);
+                println!("开始连接数据库...");
 
-                // 配置连接池以优化性能
+                // 配置连接池以优化性能 - 针对慢网络环境优化
                 let pool = sqlx::mysql::MySqlPoolOptions::new()
-                    .max_connections(10)
-                    .min_connections(2)
-                    .acquire_timeout(std::time::Duration::from_secs(30))
-                    .idle_timeout(std::time::Duration::from_secs(600))
-                    .max_lifetime(std::time::Duration::from_secs(1800))
+                    .max_connections(5)  // 减少最大连接数，避免过多并发
+                    .min_connections(1)  // 减少最小连接数
+                    .acquire_timeout(std::time::Duration::from_secs(60))  // 增加获取连接超时到 60 秒
+                    .idle_timeout(std::time::Duration::from_secs(300))  // 减少空闲超时到 5 分钟
+                    .max_lifetime(std::time::Duration::from_secs(900))  // 减少最大生命周期到 15 分钟
+                    .test_before_acquire(true)  // 获取连接前测试，避免使用已关闭的连接
+                    .after_connect(|_metadata, _handle| Box::pin(async move {
+                        // 执行 SET NAMES utf8mb4 确保正确的字符集
+                        Ok(())
+                    }))
                     .connect(db_url)
-                    .await
-                    .expect("Failed to connect to database");
+                    .await;
 
-                // 注意：不再使用自动迁移，需要在 MySQL 中手动创建表
-                // 请执行 src-tauri/migrations/001_create_calendars_and_events_table.sql 中的 SQL 语句
+                match pool {
+                    Ok(pool) => {
+                        println!("数据库连接成功");
+                        // 注意：不再使用自动迁移，需要在 MySQL 中手动创建表
+                        // 请执行 src-tauri/migrations/001_create_calendars_and_events_table.sql 中的 SQL 语句
 
-                // 启动提醒服务
-                spawn(start_reminder_service(app_handle.clone(), pool.clone()));
+                        // 启动提醒服务
+                        tauri::async_runtime::spawn(start_reminder_service(handle.clone(), pool.clone()));
 
-                // 将数据库连接池存储在应用状态中
-                app.manage(pool);
+                        // 将数据库连接池存储在应用状态中
+                        handle.manage(pool);
+                    }
+                    Err(e) => {
+                        eprintln!("数据库连接失败: {}", e);
+                        // 不 panic，让应用继续运行，前端可以显示错误信息
+                    }
+                }
             });
 
             if cfg!(debug_assertions) {

@@ -270,6 +270,8 @@ const showMoreEvents = (date: Date) => {
   transition: background-color 0.2s ease;
   /* min-height: 120px; */
   position: relative;
+  min-width: 0; /* 允许 flex 子项缩小 */
+  overflow: hidden; /* 防止内容溢出 */
 }
 
 .day-cell:hover {
@@ -325,6 +327,8 @@ const showMoreEvents = (date: Date) => {
   flex-direction: column;
   gap: 2px;
   overflow-y: auto;
+  min-width: 0; /* 允许 flex 子项缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
 }
 
 .event-item {
@@ -336,14 +340,18 @@ const showMoreEvents = (date: Date) => {
   font-size: 12px;
   cursor: pointer;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0; /* 关键：允许 flex 子项缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
+  flex-shrink: 1; /* 允许收缩 */
 }
 
 .event-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
+  min-width: 0; /* 关键：允许文本容器缩小 */
+  max-width: 100%; /* 确保不超过容器宽度 */
 }
 
 .event-time {
