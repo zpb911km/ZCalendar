@@ -9,10 +9,11 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "format": "prettier --write \"src/**/*.{js,ts,vue,json,css,scss}\"",
-    "release": "node scripts/update-version.js && standard-version",
+    "release": "node scripts/update-version.cjs && standard-version",
     "release:patch": "node scripts/update-version.cjs && standard-version --release-as patch",
     "release:minor": "node scripts/update-version.cjs && standard-version --release-as minor",
-    "release:major": "node scripts/update-version.cjs && standard-version --release-as major"
+    "release:major": "node scripts/update-version.cjs && standard-version --release-as major",
+    "release:set": "node scripts/update-version.cjs && standard-version --release-as"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
