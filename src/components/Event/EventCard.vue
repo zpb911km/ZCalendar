@@ -86,7 +86,7 @@ const onEventClick = () => {
 <style scoped>
 .event-card {
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 10px;
   margin: 2px 0;
   color: var(--event-text-color);
   cursor: pointer;

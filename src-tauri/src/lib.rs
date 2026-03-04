@@ -996,15 +996,36 @@ async fn test_db_connection(db_url: String) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    // 执行一个简单查询验证连接
-    let _ = sqlx::query("SELECT 1")
-        .fetch_one(&pool)
-        .await
-        .map_err(|e| e.to_string())?;
+    // 检查表结构是否存在
+    let has_tables = check_database_structure(&pool).await;
 
     pool.close().await;
 
-    Ok("连接成功".to_string())
+    if has_tables {
+        Ok("连接成功，数据库结构正常".to_string())
+    } else {
+        Ok("连接成功，但数据库表结构不存在，需要初始化".to_string())
+    }
+}
+
+// 检查数据库表结构是否存在
+async fn check_database_structure(pool: &sqlx::mysql::MySqlPool) -> bool {
+    // 检查 events 表是否存在
+    let result = sqlx::query(
+        "SELECT COUNT(*) as count FROM information_schema.tables 
+         WHERE table_schema = DATABASE() 
+         AND table_name IN ('events', 'calendars')"
+    )
+    .fetch_one(pool)
+    .await;
+
+    match result {
+        Ok(row) => {
+            let count: i64 = row.get("count");
+            count == 2
+        }
+        Err(_) => false,
+    }
 }
 
 // 发送Android通知的函数
@@ -1127,7 +1148,85 @@ pub fn run() {
             get_db_config,
             save_db_config,
             test_db_connection,
+            initialize_database,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+// 初始化数据库表结构
+#[tauri::command]
+async fn initialize_database(db_url: String) -> Result<String, String> {
+    let pool = sqlx::mysql::MySqlPoolOptions::new()
+        .max_connections(1)
+        .acquire_timeout(std::time::Duration::from_secs(10))
+        .connect(&db_url)
+        .await
+        .map_err(|e| format!("连接数据库失败: {}", e))?;
+
+    // 创建 calendars 表
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS calendars (
+            id VARCHAR(255) PRIMARY KEY NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            color VARCHAR(255) NOT NULL,
+            is_primary BOOLEAN NOT NULL DEFAULT 0,
+            created_at VARCHAR(255) NOT NULL,
+            updated_at VARCHAR(255) NOT NULL
+        )
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| format!("创建 calendars 表失败: {}", e))?;
+
+    // 创建 events 表
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            start VARCHAR(255) NOT NULL,
+            end VARCHAR(255) NOT NULL,
+            all_day BOOLEAN NOT NULL DEFAULT 0,
+            reminder_minutes INT NOT NULL DEFAULT 0,
+            created_at VARCHAR(255) NOT NULL,
+            updated_at VARCHAR(255) NOT NULL,
+            recurrence_rule TEXT,
+            recurrence_id VARCHAR(255),
+            sequence INT NOT NULL DEFAULT 0,
+            status VARCHAR(50) NOT NULL DEFAULT 'CONFIRMED',
+            location VARCHAR(255),
+            organizer VARCHAR(255),
+            attendees TEXT,
+            url VARCHAR(255),
+            categories VARCHAR(255),
+            priority INT,
+            calendar_id VARCHAR(255),
+            FOREIGN KEY (calendar_id) REFERENCES calendars (id) ON DELETE SET NULL
+        )
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| format!("创建 events 表失败: {}", e))?;
+
+    // 创建索引（忽略已存在的索引）
+    let indexes = vec![
+        "idx_events_start ON events (start)",
+        "idx_events_end ON events (end)",
+        "idx_events_calendar_id ON events (calendar_id)",
+        "idx_events_recurrence_id ON events (recurrence_id)",
+    ];
+    
+    for index in indexes {
+        let _ = sqlx::query(&format!("CREATE INDEX {}", index))
+            .execute(&pool)
+            .await;
+    }
+    
+    pool.close().await;
+    Ok("数据库初始化成功".to_string())
 }

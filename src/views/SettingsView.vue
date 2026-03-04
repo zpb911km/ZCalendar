@@ -77,10 +77,25 @@
               placeholder="mysql://user:password@host:port/database"
               class="db-input"
             />
+          </div>
+          <div class="db-config">
             <button type="button" class="test-btn" @click="testDbConnection">
               测试连接
             </button>
-            <button type="button" class="save-btn" @click="saveDbConfig">
+            <button
+              type="button"
+              class="init-btn"
+              @click="initializeDatabase"
+              :disabled="dbTestStatus !== 'warning' && !dbTestResult"
+            >
+              初始化数据库
+            </button>
+            <button
+              type="button"
+              class="save-btn"
+              :disabled="dbTestStatus !== 'success'"
+              @click="saveDbConfig"
+            >
               保存配置
             </button>
           </div>
@@ -89,6 +104,8 @@
           </div>
           <p class="hint">
             格式: mysql://username:password@host:port/database
+            <br />
+            首次使用新数据库时，请先点击"测试连接"，然后点击"初始化数据库"
           </p>
         </div>
         <div class="setting-item">
@@ -202,7 +219,9 @@ const showNotifacationWarning = ref(true);
 // 数据库配置
 const dbUrl = ref('');
 const dbTestResult = ref('');
-const dbTestStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
+const dbTestStatus = ref<'idle' | 'testing' | 'success' | 'error' | 'warning'>(
+  'idle'
+);
 
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
@@ -275,12 +294,54 @@ const testDbConnection = async () => {
 
   try {
     const { invoke } = await import('@tauri-apps/api/core');
-    const result = await invoke<string>('test_db_connection', { dbUrl: dbUrl.value });
+    const result = await invoke<string>('test_db_connection', {
+      dbUrl: dbUrl.value,
+    });
     dbTestResult.value = result;
-    dbTestStatus.value = 'success';
+
+    // 检查是否需要初始化
+    if (result.includes('需要初始化')) {
+      dbTestStatus.value = 'warning';
+    } else {
+      dbTestStatus.value = 'success';
+    }
   } catch (error: any) {
     dbTestResult.value = error || '连接测试失败';
     dbTestStatus.value = 'error';
+  }
+};
+
+const initializeDatabase = async () => {
+  if (!dbUrl.value.trim()) {
+    alert('请先输入数据库连接字符串');
+    return;
+  }
+
+  if (
+    !confirm(
+      '确定要初始化数据库吗？这将在当前数据库中创建新的表结构。\n\n注意：如果表已存在，不会覆盖现有数据。'
+    )
+  ) {
+    return;
+  }
+
+  const { showLoading, hideLoading } = useLoading();
+  try {
+    showLoading();
+    const { invoke } = await import('@tauri-apps/api/core');
+    const result = await invoke<string>('initialize_database', {
+      dbUrl: dbUrl.value,
+    });
+    alert(result);
+    dbTestResult.value = '数据库已初始化';
+    dbTestStatus.value = 'success';
+  } catch (error: any) {
+    console.error('初始化数据库失败:', error);
+    alert(`初始化数据库失败: ${error}`);
+    dbTestResult.value = error || '初始化失败';
+    dbTestStatus.value = 'error';
+  } finally {
+    hideLoading();
   }
 };
 
@@ -290,6 +351,22 @@ const saveDbConfig = async () => {
     showLoading();
     const { invoke } = await import('@tauri-apps/api/core');
     await invoke('save_db_config', { dbUrl: dbUrl.value });
+
+    // 检查数据库结构
+    const testResult = await invoke<string>('test_db_connection', {
+      dbUrl: dbUrl.value,
+    });
+
+    if (testResult.includes('需要初始化')) {
+      const shouldInit = confirm(
+        '连接成功，但数据库表结构不存在。\n\n是否立即初始化数据库？'
+      );
+      if (shouldInit) {
+        await initializeDatabase();
+        return;
+      }
+    }
+
     alert('数据库配置已保存，应用将重新连接数据库');
     dbTestResult.value = '';
     dbTestStatus.value = 'idle';
@@ -515,6 +592,7 @@ const clearAllEvents = async () => {
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  width: 100%;
 }
 
 .db-input {
@@ -527,6 +605,7 @@ const clearAllEvents = async () => {
 }
 
 .test-btn,
+.init-btn,
 .save-btn {
   padding: 8px 16px;
   border: none;
@@ -544,6 +623,16 @@ const clearAllEvents = async () => {
 .save-btn {
   background-color: var(--primary-color);
   color: white;
+}
+
+.init-btn {
+  background-color: var(--warning-color);
+  color: var(--text-color);
+}
+
+.init-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .test-result {
@@ -566,6 +655,11 @@ const clearAllEvents = async () => {
 .test-result.error {
   background-color: rgba(244, 67, 54, 0.1);
   color: #f44336;
+}
+
+.test-result.warning {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
 }
 
 .hint {
