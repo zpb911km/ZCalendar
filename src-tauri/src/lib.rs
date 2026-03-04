@@ -1,11 +1,14 @@
 use chrono::{DateTime, Duration, FixedOffset, NaiveDateTime, Utc};
 use ical::parser::ical::IcalParser;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Row, MySqlPool};
+use sqlx::{FromRow, MySqlPool, Row};
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_notification::NotificationExt;
 use tokio::spawn;
 use tokio::time::{sleep, Duration as TokioDuration};
+
+mod config;
+use config::ConfigManager;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 struct Event {
@@ -153,7 +156,7 @@ async fn create_event(
     {
         Ok(i) => {
             last_id = i.last_insert_id();
-        },
+        }
         Err(e) => {
             return Err(format!("插入事件失败: {}", e));
         }
@@ -322,15 +325,22 @@ async fn import_ical(
 
             // 处理事件属性
             for property in &event.properties {
-                let rpl = |s: String| 
+                let rpl = |s: String| {
                     s.replace("\\n", "\n")
-                    .replace("\\N", "\n")
-                    .replace("\\;", ";")
-                    .replace("\\,", ",")
-                    .replace("\\\\", "\\")
-                    .replace("，", ",");
+                        .replace("\\N", "\n")
+                        .replace("\\;", ";")
+                        .replace("\\,", ",")
+                        .replace("\\\\", "\\")
+                        .replace("，", ",")
+                };
                 match property.name.as_str() {
-                    "SUMMARY" => title = property.value.clone().unwrap_or_default().replace("\\n", "\n"),
+                    "SUMMARY" => {
+                        title = property
+                            .value
+                            .clone()
+                            .unwrap_or_default()
+                            .replace("\\n", "\n")
+                    }
                     "DESCRIPTION" => description = property.value.clone().map(rpl),
                     "DTSTART" => start = property.value.clone(),
                     "DTEND" => end = property.value.clone(),
@@ -349,8 +359,6 @@ async fn import_ical(
                     }
                 }
             }
-            
-            
 
             // 处理提醒（VALARM 组件）
             for alarm in &event.alarms {
@@ -359,7 +367,8 @@ async fn import_ical(
                         if let Some(ref trigger_value) = property.value {
                             // 解析 TRIGGER 值，例如 "-PT15M" 表示提前 15 分钟
                             if trigger_value.starts_with("-PT") && trigger_value.ends_with("M") {
-                                let minutes_str = trigger_value.strip_prefix("-PT")
+                                let minutes_str = trigger_value
+                                    .strip_prefix("-PT")
                                     .and_then(|s| s.strip_suffix("M"))
                                     .unwrap_or("15");
                                 if let Ok(minutes) = minutes_str.parse::<i32>() {
@@ -373,8 +382,10 @@ async fn import_ical(
 
             if let (Some(start_str), Some(end_str)) = (start, end) {
                 // 使用带时区偏移的解析函数，并检测是否解析失败
-                let start_dt_result = parse_ical_datetime_with_offset(&start_str, timezone_offset_hours);
-                let end_dt_result = parse_ical_datetime_with_offset(&end_str, timezone_offset_hours);
+                let start_dt_result =
+                    parse_ical_datetime_with_offset(&start_str, timezone_offset_hours);
+                let end_dt_result =
+                    parse_ical_datetime_with_offset(&end_str, timezone_offset_hours);
 
                 let start_dt = start_dt_result.clone().unwrap_or_else(|_| Utc::now());
                 let end_dt = end_dt_result.clone().unwrap_or_else(|_| Utc::now());
@@ -596,30 +607,42 @@ async fn get_platform() -> Result<String, String> {
         return Ok("ios".to_string());
     }
 
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux", target_os = "android", target_os = "ios")))]
+    #[cfg(not(any(
+        target_os = "windows",
+        target_os = "macos",
+        target_os = "linux",
+        target_os = "android",
+        target_os = "ios"
+    )))]
     {
         return Ok("unknown".to_string());
     }
 }
 
 #[tauri::command]
-async fn save_file_to_downloads(app_handle: tauri::AppHandle, content: String, filename: String) -> Result<String, String> {
+async fn save_file_to_downloads(
+    app_handle: tauri::AppHandle,
+    content: String,
+    filename: String,
+) -> Result<String, String> {
     use std::fs;
     use std::io::Write;
-    
+
     // 获取下载目录
-    let downloads_dir = app_handle.path().download_dir()
+    let downloads_dir = app_handle
+        .path()
+        .download_dir()
         .map_err(|e| format!("Failed to get download directory: {}", e))?;
-    
+
     let file_path = downloads_dir.join(&filename);
-    
+
     // 写入文件
-    let mut file = fs::File::create(&file_path)
-        .map_err(|e| format!("Failed to create file: {}", e))?;
-    
+    let mut file =
+        fs::File::create(&file_path).map_err(|e| format!("Failed to create file: {}", e))?;
+
     file.write_all(content.as_bytes())
         .map_err(|e| format!("Failed to write to file: {}", e))?;
-    
+
     Ok(file_path.to_string_lossy().to_string())
 }
 
@@ -691,7 +714,8 @@ async fn create_calendar(
         .map_err(|e| e.to_string())?;
 
     // 查询插入的记录
-    let select_query = "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars WHERE id = ?";
+    let select_query =
+        "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars WHERE id = ?";
     let new_calendar = sqlx::query_as::<_, Calendar>(select_query)
         .bind(&calendar.id)
         .fetch_one(&*pool)
@@ -722,7 +746,8 @@ async fn update_calendar(
     calendar: Calendar,
 ) -> Result<Calendar, String> {
     let now = Utc::now();
-    let update_query = "UPDATE calendars SET name = ?, color = ?, is_primary = ?, updated_at = ? WHERE id = ?";
+    let update_query =
+        "UPDATE calendars SET name = ?, color = ?, is_primary = ?, updated_at = ? WHERE id = ?";
     sqlx::query(update_query)
         .bind(&calendar.name)
         .bind(&calendar.color)
@@ -734,7 +759,8 @@ async fn update_calendar(
         .map_err(|e| e.to_string())?;
 
     // 查询更新后的记录
-    let select_query = "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars WHERE id = ?";
+    let select_query =
+        "SELECT id, name, color, is_primary, created_at, updated_at FROM calendars WHERE id = ?";
     let updated_calendar = sqlx::query_as::<_, Calendar>(select_query)
         .bind(&calendar.id)
         .fetch_one(&*pool)
@@ -878,13 +904,13 @@ async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &MyS
 
     // 添加超时保护，防止查询长时间阻塞
     let upcoming_events: Vec<Event> = tokio::time::timeout(
-        std::time::Duration::from_secs(10),  // 10 秒超时
+        std::time::Duration::from_secs(10), // 10 秒超时
         sqlx::query_as::<_, Event>(query)
             .bind(&now.to_rfc3339())
-            .fetch_all(pool)
+            .fetch_all(pool),
     )
     .await
-    .unwrap_or(Ok(Vec::new()))  // 超时或错误都返回空数组
+    .unwrap_or(Ok(Vec::new())) // 超时或错误都返回空数组
     .unwrap_or_default();
     // println!("find {} upcoming events at {}", upcoming_events.len(), now.to_rfc3339());
     for event in upcoming_events {
@@ -932,6 +958,55 @@ async fn send_reminder_notification<R: Runtime>(app_handle: &AppHandle<R>, event
     let _ = notification.show();
 }
 
+#[tauri::command]
+async fn get_db_config(app_handle: tauri::AppHandle) -> Result<Option<String>, String> {
+    let config_manager = app_handle.state::<ConfigManager>();
+    let config = config_manager.load_config();
+    Ok(config.db_url)
+}
+
+#[tauri::command]
+async fn save_db_config(app_handle: tauri::AppHandle, db_url: String) -> Result<(), String> {
+    let config_manager = app_handle.state::<ConfigManager>();
+    let mut config = config_manager.load_config();
+    config.db_url = if db_url.trim().is_empty() {
+        None
+    } else {
+        Some(db_url)
+    };
+    config_manager
+        .save_config(&config)
+        .map_err(|e| e.to_string())?;
+
+    // 如果保存了新的数据库配置，尝试重新连接
+    if let Some(url) = &config.db_url {
+        init_database_connection(&app_handle, url).await;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn test_db_connection(db_url: String) -> Result<String, String> {
+    // 尝试连接数据库
+    let pool = sqlx::mysql::MySqlPoolOptions::new()
+        .max_connections(1)
+        .acquire_timeout(std::time::Duration::from_secs(10))
+        .connect(&db_url)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 执行一个简单查询验证连接
+    let _ = sqlx::query("SELECT 1")
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    pool.close().await;
+
+    Ok("连接成功".to_string())
+}
+
 // 发送Android通知的函数
 #[tauri::command]
 async fn send_notification<R: Runtime>(
@@ -949,96 +1024,79 @@ async fn send_notification<R: Runtime>(
     Ok("通知已发送".to_string())
 }
 
+// 初始化数据库连接
+async fn init_database_connection<R: Runtime>(app_handle: &AppHandle<R>, db_url: &str) {
+    println!("Database URL: mysql://****");
+    println!("开始连接数据库...");
+
+    // 配置连接池以优化性能 - 针对慢网络环境优化
+    let pool = sqlx::mysql::MySqlPoolOptions::new()
+        .max_connections(5) // 减少最大连接数，避免过多并发
+        .min_connections(1) // 减少最小连接数
+        .acquire_timeout(std::time::Duration::from_secs(60)) // 增加获取连接超时到 60 秒
+        .idle_timeout(std::time::Duration::from_secs(300)) // 减少空闲超时到 5 分钟
+        .max_lifetime(std::time::Duration::from_secs(900)) // 减少最大生命周期到 15 分钟
+        .test_before_acquire(true) // 获取连接前测试，避免使用已关闭的连接
+        .after_connect(|_metadata, _handle| {
+            Box::pin(async move {
+                // 执行 SET NAMES utf8mb4 确保正确的字符集
+                Ok(())
+            })
+        })
+        .connect(db_url)
+        .await;
+
+    match pool {
+        Ok(pool) => {
+            println!("数据库连接成功");
+            // 注意：不再使用自动迁移，需要在 MySQL 中手动创建表
+            // 请执行 src-tauri/migrations/001_create_calendars_and_events_table.sql 中的 SQL 语句
+
+            // 启动提醒服务
+            tauri::async_runtime::spawn(start_reminder_service(app_handle.clone(), pool.clone()));
+
+            // 将数据库连接池存储在应用状态中
+            app_handle.manage(pool);
+        }
+        Err(e) => {
+            eprintln!("数据库连接失败: {}", e);
+            // 不 panic，让应用继续运行，前端可以显示错误信息
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle();
-
-            // 异步创建数据库连接池，不阻塞 WebView 加载
-            let handle = app_handle.clone();
+            let app_handle_c = app_handle.clone();
             tauri::async_runtime::spawn(async move {
-                // MySQL 数据库连接配置
-                let db_url = "mysql://zcalendar_user:zcalendar@103.151.217.252:3306/zcalendar";
+                let config_manager =
+                    ConfigManager::new(&app_handle_c).expect("Failed to create config manager");
+                let config = config_manager.load_config();
 
-                println!("Database URL: {}", db_url);
-                println!("开始连接数据库...");
+                // 将配置管理器存储到应用状态中
+                app_handle_c.manage(config_manager);
 
-                // 配置连接池以优化性能 - 针对慢网络环境优化
-                let pool = sqlx::mysql::MySqlPoolOptions::new()
-                    .max_connections(5)  // 减少最大连接数，避免过多并发
-                    .min_connections(1)  // 减少最小连接数
-                    .acquire_timeout(std::time::Duration::from_secs(60))  // 增加获取连接超时到 60 秒
-                    .idle_timeout(std::time::Duration::from_secs(300))  // 减少空闲超时到 5 分钟
-                    .max_lifetime(std::time::Duration::from_secs(900))  // 减少最大生命周期到 15 分钟
-                    .test_before_acquire(true)  // 获取连接前测试，避免使用已关闭的连接
-                    .after_connect(|_metadata, _handle| Box::pin(async move {
-                        // 执行 SET NAMES utf8mb4 确保正确的字符集
-                        Ok(())
-                    }))
-                    .connect(db_url)
-                    .await;
-
-                match pool {
-                    Ok(pool) => {
-                        println!("数据库连接成功");
-                        // 注意：不再使用自动迁移，需要在 MySQL 中手动创建表
-                        // 请执行 src-tauri/migrations/001_create_calendars_and_events_table.sql 中的 SQL 语句
-
-                        // 启动提醒服务
-                        tauri::async_runtime::spawn(start_reminder_service(handle.clone(), pool.clone()));
-
-                        // 将数据库连接池存储在应用状态中
-                        handle.manage(pool);
-                    }
-                    Err(e) => {
-                        eprintln!("数据库连接失败: {}", e);
-                        // 不 panic，让应用继续运行，前端可以显示错误信息
-                    }
+                // 如果有数据库配置，尝试连接
+                if let Some(db_url) = &config.db_url {
+                    let handle = app_handle_c.clone();
+                    let db_url_clone = db_url.clone();
+                    tauri::async_runtime::spawn(async move {
+                        init_database_connection(&handle, &db_url_clone).await;
+                    });
+                } else {
+                    println!("未配置数据库连接，应用将在无数据库模式下运行");
                 }
             });
-
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
 
             // 为移动平台添加通知插件
             #[cfg(mobile)]
             {
                 use tauri_plugin_notification::init;
                 let notification_plugin = init();
-
-                // 配置Android通知渠道
-                #[cfg(target_os = "android")]
-                {
-                    // 初始化通知插件
-                    let _ = app.handle().plugin(notification_plugin);
-
-                    // 等待应用完全初始化后创建通知渠道
-                    let _ = app.handle().clone();
-                    tauri::async_runtime::spawn(async move {
-                        // 等待一点时间确保插件完全加载
-                        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-
-                        // 由于当前Tauri版本可能不直接支持创建通知渠道，
-                        // 我们通过发送一个通知来触发必要的权限和配置
-                        // let _ = app_handle.plugin(tauri_plugin_notification::init());
-                        // let _ = app_handle
-                        //     .notification()
-                        //     .builder()
-                        //     .title("初始化通知")
-                        //     .body("通知系统已准备就绪")
-                        //     .show();
-                    });
-                }
-                #[cfg(not(target_os = "android"))]
-                {
-                    app.handle().plugin(notification_plugin);
-                }
+                app.handle().plugin(notification_plugin);
             }
 
             Ok(())
@@ -1052,8 +1110,6 @@ pub fn run() {
             delete_event,
             delete_all_events,
             get_events_in_range,
-            import_ical,
-            export_ical,
             search_events,
             get_upcoming_events,
             get_all_calendars,
@@ -1062,9 +1118,15 @@ pub fn run() {
             update_calendar,
             delete_calendar,
             get_calendar_events,
+            import_ical,
+            export_ical,
             send_notification,
             get_platform,
             save_file_to_downloads,
+            // 数据库配置相关命令
+            get_db_config,
+            save_db_config,
+            test_db_connection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

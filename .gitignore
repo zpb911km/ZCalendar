@@ -29,4 +29,12 @@ src-tauri/icons/
 src-tauri/calendar.db
 src-tauri/calendar.db-shm
 src-tauri/calendar.db-wal
+
+# Environment variables (DO NOT COMMIT)
+src-tauri/.env
+src-tauri/.env.local
+src-tauri/.env.production
+src-tauri/.env.*.local
+
 作业/
+AGENTS.md

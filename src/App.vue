@@ -67,6 +67,20 @@ const initApp = async () => {
     setLoadingBarInstance(loadingBarRef.value);
   }
 
+  // 检查是否有数据库配置
+  const { invoke } = await import('@tauri-apps/api/core');
+  const dbConfig = await invoke<string | null>('get_db_config');
+
+  if (!dbConfig) {
+    // 没有数据库配置，直接进入应用
+    console.log('未配置数据库，跳过连接检测');
+    showSplash.value = false;
+    return;
+  }
+
+  // 有数据库配置，尝试连接
+  connectionStatus.value = 'connecting';
+
   // 设置30秒超时
   connectionTimeout = window.setTimeout(() => {
     if (connectionStatus.value === 'connecting') {

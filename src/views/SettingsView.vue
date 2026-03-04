@@ -69,6 +69,29 @@
       <div class="settings-section">
         <h2>数据管理</h2>
         <div class="setting-item">
+          <label>数据库连接</label>
+          <div class="db-config">
+            <input
+              v-model="dbUrl"
+              type="text"
+              placeholder="mysql://user:password@host:port/database"
+              class="db-input"
+            />
+            <button type="button" class="test-btn" @click="testDbConnection">
+              测试连接
+            </button>
+            <button type="button" class="save-btn" @click="saveDbConfig">
+              保存配置
+            </button>
+          </div>
+          <div v-if="dbTestResult" class="test-result" :class="dbTestStatus">
+            {{ dbTestResult }}
+          </div>
+          <p class="hint">
+            格式: mysql://username:password@host:port/database
+          </p>
+        </div>
+        <div class="setting-item">
           <label>时区设置</label>
           <CustomSelect
             v-model="timezoneOffset"
@@ -176,6 +199,11 @@ const workdayEnd = ref('18:00');
 const timezoneOffset = ref('8'); // 默认UTC+8
 const showNotifacationWarning = ref(true);
 
+// 数据库配置
+const dbUrl = ref('');
+const dbTestResult = ref('');
+const dbTestStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
+
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
 
@@ -184,6 +212,8 @@ onMounted(() => {
   loadSettings();
   // 加载日历列表
   loadCalendars();
+  // 加载数据库配置
+  loadDbConfig();
 });
 
 const loadSettings = () => {
@@ -219,6 +249,55 @@ const loadCalendars = async () => {
     calendars.value = await calendarService.getAllCalendars();
   } catch (error) {
     console.error('加载日历失败:', error);
+  }
+};
+
+// 数据库配置相关函数
+const loadDbConfig = async () => {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const config = await invoke<string | null>('get_db_config');
+    dbUrl.value = config || '';
+  } catch (error) {
+    console.error('加载数据库配置失败:', error);
+  }
+};
+
+const testDbConnection = async () => {
+  if (!dbUrl.value.trim()) {
+    dbTestResult.value = '请输入数据库连接字符串';
+    dbTestStatus.value = 'error';
+    return;
+  }
+
+  dbTestStatus.value = 'testing';
+  dbTestResult.value = '正在测试连接...';
+
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const result = await invoke<string>('test_db_connection', { dbUrl: dbUrl.value });
+    dbTestResult.value = result;
+    dbTestStatus.value = 'success';
+  } catch (error: any) {
+    dbTestResult.value = error || '连接测试失败';
+    dbTestStatus.value = 'error';
+  }
+};
+
+const saveDbConfig = async () => {
+  const { showLoading, hideLoading } = useLoading();
+  try {
+    showLoading();
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('save_db_config', { dbUrl: dbUrl.value });
+    alert('数据库配置已保存，应用将重新连接数据库');
+    dbTestResult.value = '';
+    dbTestStatus.value = 'idle';
+  } catch (error) {
+    console.error('保存数据库配置失败:', error);
+    alert('保存数据库配置失败');
+  } finally {
+    hideLoading();
   }
 };
 
@@ -430,6 +509,70 @@ const clearAllEvents = async () => {
   border-radius: 4px;
   background-color: var(--input-background-color);
   color: var(--text-color);
+}
+
+.db-config {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.db-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+}
+
+.test-btn,
+.save-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.test-btn {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+
+.save-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.test-result {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.test-result.testing {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.test-result.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.test-result.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.6;
 }
 
 .color-picker {
