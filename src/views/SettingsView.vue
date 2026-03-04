@@ -162,7 +162,7 @@
       <div class="settings-section">
         <h2>关于</h2>
         <div class="about-info">
-          <p><strong>应用版本:</strong> 0.1.0</p>
+          <p><strong>应用版本:</strong> 0.1.1</p>
           <p><strong>构建日期:</strong> 2026-03-04</p>
           <a
             href="https://github.com/zpb911km/ZCalendar"

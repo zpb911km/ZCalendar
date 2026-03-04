@@ -1,7 +1,7 @@
 {
   "name": "zcalendar",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,11 +9,11 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "format": "prettier --write \"src/**/*.{js,ts,vue,json,css,scss}\"",
-    "release": "node scripts/update-version.cjs && standard-version",
-    "release:patch": "node scripts/update-version.cjs && standard-version --release-as patch",
-    "release:minor": "node scripts/update-version.cjs && standard-version --release-as minor",
-    "release:major": "node scripts/update-version.cjs && standard-version --release-as major",
-    "release:set": "node scripts/update-version.cjs && standard-version --release-as"
+    "release": "standard-version",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:set": "standard-version --release-as"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
