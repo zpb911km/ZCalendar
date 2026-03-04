@@ -991,7 +991,7 @@ async fn test_db_connection(db_url: String) -> Result<String, String> {
     // 尝试连接数据库
     let pool = sqlx::mysql::MySqlPoolOptions::new()
         .max_connections(1)
-        .acquire_timeout(std::time::Duration::from_secs(10))
+        .acquire_timeout(std::time::Duration::from_secs(60))
         .connect(&db_url)
         .await
         .map_err(|e| e.to_string())?;
@@ -1014,7 +1014,7 @@ async fn check_database_structure(pool: &sqlx::mysql::MySqlPool) -> bool {
     let result = sqlx::query(
         "SELECT COUNT(*) as count FROM information_schema.tables 
          WHERE table_schema = DATABASE() 
-         AND table_name IN ('events', 'calendars')"
+         AND table_name IN ('events', 'calendars')",
     )
     .fetch_one(pool)
     .await;
@@ -1117,7 +1117,7 @@ pub fn run() {
             {
                 use tauri_plugin_notification::init;
                 let notification_plugin = init();
-                app.handle().plugin(notification_plugin);
+                let _ = app.handle().plugin(notification_plugin);
             }
 
             Ok(())
@@ -1220,13 +1220,13 @@ async fn initialize_database(db_url: String) -> Result<String, String> {
         "idx_events_calendar_id ON events (calendar_id)",
         "idx_events_recurrence_id ON events (recurrence_id)",
     ];
-    
+
     for index in indexes {
         let _ = sqlx::query(&format!("CREATE INDEX {}", index))
             .execute(&pool)
             .await;
     }
-    
+
     pool.close().await;
     Ok("数据库初始化成功".to_string())
 }

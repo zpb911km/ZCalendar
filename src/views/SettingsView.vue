@@ -153,6 +153,63 @@
           </button>
         </div>
         <div class="setting-item">
+          <button
+            @click="showImportText = !showImportText"
+            class="btn btn-secondary"
+          >
+            {{ showImportText ? '隐藏' : '显示' }}文本导入
+          </button>
+        </div>
+        <div v-if="showImportText" class="setting-item import-text-section">
+          <label>文本导入</label>
+          <textarea
+            v-model="importTextContent"
+            placeholder="请粘贴 iCalendar (.ics) 格式的文本内容..."
+            class="import-textarea"
+            @input="onImportTextChange"
+          ></textarea>
+          <div class="import-actions">
+            <button
+              @click="formatIcalContent"
+              :disabled="!importTextContent.trim()"
+              class="btn btn-secondary"
+            >
+              格式化
+            </button>
+            <button
+              @click="validateIcalContent"
+              :disabled="!importTextContent.trim()"
+              class="btn btn-secondary"
+            >
+              验证格式
+            </button>
+            <button
+              @click="importEventsFromText"
+              :disabled="!isValidationPassed"
+              class="btn btn-primary"
+            >
+              导入
+            </button>
+            <button @click="clearImportText" class="btn btn-secondary">
+              清空
+            </button>
+          </div>
+          <div
+            v-if="validationResult"
+            class="validation-result"
+            :class="validationStatus"
+          >
+            {{ validationResult }}
+          </div>
+          <div
+            v-if="importResult"
+            class="import-result"
+            :class="importResultStatus"
+          >
+            {{ importResult }}
+          </div>
+        </div>
+        <div class="setting-item">
           <button @click="clearAllEvents" class="btn btn-danger">
             清空所有事件
           </button>
@@ -225,6 +282,15 @@ const dbTestStatus = ref<'idle' | 'testing' | 'success' | 'error' | 'warning'>(
 
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
+
+// 文本导入状态
+const showImportText = ref(false);
+const importTextContent = ref('');
+const importResult = ref('');
+const importResultStatus = ref<'success' | 'error' | ''>('');
+const validationResult = ref('');
+const validationStatus = ref<'success' | 'error' | ''>('');
+const isValidationPassed = ref(false);
 
 onMounted(() => {
   // 加载保存的设置
@@ -465,6 +531,229 @@ const exportAllEvents = async () => {
     alert('导出事件失败，请重试');
   } finally {
     hideLoading();
+  }
+};
+
+const importEventsFromText = async () => {
+  const { showLoading, hideLoading } = useLoading();
+  const text = importTextContent.value.trim();
+
+  if (!text) {
+    importResult.value = '请输入 iCalendar 格式的文本内容';
+    importResultStatus.value = 'error';
+    return;
+  }
+
+  try {
+    showLoading();
+    importResult.value = '正在导入...';
+    importResultStatus.value = '';
+
+    // 获取当前时区设置并传递给后端导入功能
+    const timezoneOffsetValue = localStorage.getItem('timezoneOffset') || '8';
+
+    const newEvents: Event[] = await invoke('import_ical', {
+      icalContent: text,
+      timezoneOffset: parseInt(timezoneOffsetValue),
+    });
+
+    importResult.value = `导入成功，共 ${newEvents.length} 条事件`;
+    importResultStatus.value = 'success';
+
+    await invoke('send_notification', {
+      title: '日历已导入',
+      body: `日历导入成功，共${newEvents.length}条`,
+    });
+
+    // 重新加载日历列表
+    loadCalendars();
+
+    // 延迟跳转，让用户看到导入结果
+    setTimeout(() => {
+      router.push('/');
+    }, 1500);
+  } catch (error) {
+    console.error('导入事件失败:', error);
+    importResult.value = '导入失败，请检查文本格式';
+    importResultStatus.value = 'error';
+  } finally {
+    hideLoading();
+  }
+};
+
+const clearImportText = () => {
+  importTextContent.value = '';
+  importResult.value = '';
+  importResultStatus.value = '';
+  validationResult.value = '';
+  validationStatus.value = '';
+  isValidationPassed.value = false;
+};
+
+const onImportTextChange = () => {
+  // 文本变化时重置验证状态
+  if (validationResult.value) {
+    validationResult.value = '';
+    validationStatus.value = '';
+    isValidationPassed.value = false;
+  }
+};
+
+const formatIcalContent = () => {
+  const content = importTextContent.value.trim();
+  if (!content) return;
+
+  // 定义需要缩进的标签对
+  const blockTags = [
+    ['BEGIN:VCALENDAR', 'END:VCALENDAR'],
+    ['BEGIN:VEVENT', 'END:VEVENT'],
+    ['BEGIN:VTODO', 'END:VTODO'],
+    ['BEGIN:VJOURNAL', 'END:VJOURNAL'],
+    ['BEGIN:VFREEBUSY', 'END:VFREEBUSY'],
+    ['BEGIN:VTIMEZONE', 'END:VTIMEZONE'],
+    ['BEGIN:STANDARD', 'END:STANDARD'],
+    ['BEGIN:DAYLIGHT', 'END:DAYLIGHT'],
+    ['BEGIN:VALARM', 'END:VALARM'],
+  ];
+
+  const lines = content.split('\n').map(line => line.trim());
+  let result: string[] = [];
+  let indentLevel = 0;
+  const indentSize = 2; // 每级缩进2个空格
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+
+    // 检查是否是结束标签
+    const isEndTag = blockTags.some(([begin, end]) => line.startsWith(end));
+
+    if (isEndTag) {
+      indentLevel = Math.max(0, indentLevel - 1);
+    }
+
+    // 添加缩进
+    const indent = ' '.repeat(indentLevel * indentSize);
+    result.push(indent + line);
+
+    // 检查是否是开始标签
+    const isBeginTag = blockTags.some(([begin, end]) => line.startsWith(begin));
+    if (isBeginTag) {
+      indentLevel++;
+    }
+  }
+
+  // 移除可能的空行
+  importTextContent.value = result.filter(line => line.trim()).join('\n');
+
+  // 格式化后重置验证状态
+  validationResult.value = '';
+  validationStatus.value = '';
+  isValidationPassed.value = false;
+};
+
+const validateIcalContent = () => {
+  const content = importTextContent.value.trim();
+
+  if (!content) {
+    validationResult.value = '请输入 iCalendar 格式的文本内容';
+    validationStatus.value = 'error';
+    isValidationPassed.value = false;
+    return;
+  }
+
+  const errors: string[] = [];
+
+  // 1. 检查是否包含 BEGIN:VCALENDAR 和 END:VCALENDAR
+  if (!content.includes('BEGIN:VCALENDAR')) {
+    errors.push('缺少 BEGIN:VCALENDAR 标记');
+  }
+  if (!content.includes('END:VCALENDAR')) {
+    errors.push('缺少 END:VCALENDAR 标记');
+  }
+
+  // 2. 检查 BEGIN:VCALENDAR 是否在 END:VCALENDAR 之前
+  const beginIndex = content.indexOf('BEGIN:VCALENDAR');
+  const endIndex = content.indexOf('END:VCALENDAR');
+  if (beginIndex > endIndex) {
+    errors.push('BEGIN:VCALENDAR 必须在 END:VCALENDAR 之前');
+  }
+
+  // 3. 检查是否包含至少一个事件
+  if (!content.includes('BEGIN:VEVENT')) {
+    errors.push('缺少事件 (BEGIN:VEVENT)');
+  }
+  if (!content.includes('END:VEVENT')) {
+    errors.push('缺少事件结束标记 (END:VEVENT)');
+  }
+
+  // 4.1 检查 BEGIN:VEVENT 和 END:VEVENT 的配对
+  const beginEventCount = (content.match(/BEGIN:VEVENT/g) || []).length;
+  const endEventCount = (content.match(/END:VEVENT/g) || []).length;
+  if (beginEventCount !== endEventCount) {
+    errors.push(
+      `事件标记不匹配: BEGIN:VEVENT(${beginEventCount}) != END:VEVENT(${endEventCount})`
+    );
+  }
+  // 4.1 检查 BEGIN:VALARM 和 END:VALARM 的配对
+  const beginAlarmCount = (content.match(/BEGIN:VALARM/g) || []).length;
+  const endAlarmCount = (content.match(/END:VALARM/g) || []).length;
+  if (beginAlarmCount !== endAlarmCount) {
+    errors.push(
+      `提醒标记不匹配: BEGIN:VALARM(${beginAlarmCount}) != END:VALARM(${endAlarmCount})`
+    );
+  }
+
+  // 5. 检查必需的字段
+  if (!content.includes('VERSION:')) {
+    errors.push('缺少 VERSION 字段');
+  }
+  if (!content.includes('PRODID:')) {
+    errors.push('缺少 PRODID 字段');
+  }
+
+  // 6. 检查事件必需字段
+  if (!content.includes('DTSTART')) {
+    errors.push('事件缺少 DTSTART 字段');
+  }
+  if (!content.includes('DTEND')) {
+    errors.push('事件缺少 DTEND 字段');
+  }
+  if (!content.includes('UID:')) {
+    errors.push('事件缺少 UID 字段');
+  }
+  if (!content.includes('SUMMARY')) {
+    errors.push('事件缺少 SUMMARY 字段');
+  }
+
+  // 7. 检查行格式（不能有空行）
+  const lines = content.split('\n');
+  const emptyLines = lines.filter(line => line.trim() === '').length;
+  if (emptyLines > 0) {
+    errors.push(`包含 ${emptyLines} 个空行`);
+  }
+
+  // 8. 检查字段名称格式（必须是冒号分隔的键值对）
+  const invalidLines: string[] = [];
+  lines.forEach((line, index) => {
+    if (line.trim() && !line.startsWith(' ') && !line.includes(':')) {
+      invalidLines.push(`第 ${index + 1} 行: "${line.trim()}"`);
+    }
+  });
+  if (invalidLines.length > 0) {
+    errors.push(
+      `无效的行格式:\n${invalidLines.slice(0, 3).join('\n')}${invalidLines.length > 3 ? '...' : ''}`
+    );
+  }
+
+  if (errors.length > 0) {
+    validationResult.value = `验证失败:\n${errors.join('\n')}`;
+    validationStatus.value = 'error';
+    isValidationPassed.value = false;
+  } else {
+    validationResult.value = `验证通过！检测到 ${beginEventCount} 个事件`;
+    validationStatus.value = 'success';
+    isValidationPassed.value = true;
   }
 };
 
@@ -780,5 +1069,74 @@ const clearAllEvents = async () => {
   padding: 2px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+}
+
+.import-text-section {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.import-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.import-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.import-result {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.import-result.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.import-result.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.validation-result {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: pre-line;
+  text-align: left;
+}
+
+.validation-result.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.validation-result.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

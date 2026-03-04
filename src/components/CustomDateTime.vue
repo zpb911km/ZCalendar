@@ -193,14 +193,6 @@ const seconds = ref<number>(0);
 
 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
-const quickTimes = [
-  { label: '00:00:00', hours: 0, minutes: 0, seconds: 0 },
-  { label: '08:00:00', hours: 8, minutes: 0, seconds: 0 },
-  { label: '12:00:00', hours: 12, minutes: 0, seconds: 0 },
-  { label: '18:00:00', hours: 18, minutes: 0, seconds: 0 },
-  { label: '23:59:59', hours: 23, minutes: 59, seconds: 59 },
-];
-
 const displayValue = computed(() => {
   if (!props.modelValue) return '请选择日期时间';
   const date = new Date(props.modelValue);
@@ -323,13 +315,6 @@ const updateTime = () => {
   tempDate.value.setHours(hours.value || 0);
   tempDate.value.setMinutes(minutes.value || 0);
   tempDate.value.setSeconds(seconds.value || 0);
-};
-
-const selectQuickTime = (time: (typeof quickTimes)[0]) => {
-  hours.value = time.hours;
-  minutes.value = time.minutes;
-  seconds.value = time.seconds;
-  updateTime();
 };
 
 const prevMonth = () => {
