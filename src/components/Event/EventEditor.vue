@@ -31,28 +31,33 @@
         <div class="form-row">
           <div class="form-group">
             <label for="status">状态</label>
-            <select id="status" v-model="formData.status">
-              <option value="CONFIRMED">已确认</option>
-              <option value="TENTATIVE">待定</option>
-              <option value="CANCELLED">已取消</option>
-              <option value="DRAFT">草稿</option>
-              <option value="FINAL">最终</option>
-              <option value="NEEDS-ACTION">需要行动</option>
-              <option value="COMPLETED">已完成</option>
-              <option value="IN-PROCESS">正在处理</option>
-            </select>
+            <CustomSelect
+              id="status"
+              v-model="formData.status"
+              class="select"
+              :options="[
+                { value: 'CONFIRMED', label: '已确认' },
+                { value: 'TENTATIVE', label: '待定' },
+                { value: 'CANCELLED', label: '已取消' },
+                { value: 'DRAFT', label: '草稿' },
+                { value: 'FINAL', label: '最终' },
+                { value: 'NEEDS-ACTION', label: '需要行动' },
+                { value: 'COMPLETED', label: '已完成' },
+                { value: 'IN-PROCESS', label: '正在处理' },
+              ]"
+            />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="start">开始时间</label>
-            <input id="start" v-model="startDateTime" type="datetime-local" />
+            <CustomDateTime id="start" v-model="startDateTime" />
           </div>
 
           <div class="form-group">
             <label for="end">结束时间</label>
-            <input id="end" v-model="endDateTime" type="datetime-local" />
+            <CustomDateTime id="end" v-model="endDateTime" />
           </div>
         </div>
 
@@ -75,15 +80,20 @@
 
         <div class="form-group">
           <label for="reminder">提醒提前时间(分钟, 0表示无提醒)</label>
-          <select id="reminder" v-model="reminderChoice">
-            <option value="0">无提醒</option>
-            <option value="5">5分钟前</option>
-            <option value="15">15分钟前</option>
-            <option value="30">30分钟前</option>
-            <option value="60">1小时前</option>
-            <option value="1440">1天前</option>
-            <option value="custom">自定义</option>
-          </select>
+          <CustomSelect
+            id="reminder"
+            v-model="reminderChoice"
+            class="select"
+            :options="[
+              { value: '0', label: '无提醒' },
+              { value: '5', label: '5分钟前' },
+              { value: '15', label: '15分钟前' },
+              { value: '30', label: '30分钟前' },
+              { value: '60', label: '1小时前' },
+              { value: '1440', label: '1天前' },
+              { value: 'custom', label: '自定义' },
+            ]"
+          />
           <input
             id="custom-reminder"
             v-if="reminderChoice === 'custom'"
@@ -113,6 +123,8 @@
 <script setup lang="ts">
 import { reactive, ref, watch, computed } from 'vue';
 import { CalendarEvent } from '@/types/event';
+import CustomSelect from '@/components/CustomSelect.vue';
+import CustomDateTime from '@/components/CustomDateTime.vue';
 
 // 定义props和emits
 const props = defineProps<{
@@ -224,7 +236,7 @@ const endDateTime = computed({
   },
 });
 
-// 将Date对象格式化为'YYYY-MM-DDTHH:mm'格式的函数
+// 将Date对象格式化为'YYYY-MM-DD HH:mm:ss'格式的函数
 function formatDateTimeLocal(date: Date): string {
   const pad = (num: number) => num.toString().padStart(2, '0');
   const year = date.getFullYear();
@@ -232,8 +244,9 @@ function formatDateTimeLocal(date: Date): string {
   const day = pad(date.getDate());
   const hours = pad(date.getHours());
   const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
 
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 // 方法
@@ -371,8 +384,7 @@ const onOverlayClick = () => {
 }
 
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group textarea {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--border-color);
@@ -384,8 +396,7 @@ const onOverlayClick = () => {
 }
 
 .form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+.form-group textarea:focus {
   outline: none;
   border-color: var(--primary-light);
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
@@ -436,5 +447,9 @@ const onOverlayClick = () => {
 
 .btn-save:hover {
   background-color: var(--primary-dark);
+}
+
+.select {
+  width: 100%;
 }
 </style>

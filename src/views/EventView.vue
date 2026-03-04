@@ -13,23 +13,22 @@
 
     <main class="event-main">
       <div class="event-filters">
-        <select v-model="filterCategory" class="category-filter">
-          <option value="">所有分类</option>
-          <option
-            v-for="category in categories"
-            :key="category"
-            :value="category"
-          >
-            {{ category }}
-          </option>
-        </select>
-        <select v-model="filterDate" class="date-filter">
-          <option value="">所有日期</option>
-          <option value="today">今天</option>
-          <option value="tomorrow">明天</option>
-          <option value="thisWeek">本周</option>
-          <option value="thisMonth">本月</option>
-        </select>
+        <CustomSelect
+          v-model="filterCategory"
+          class="category-filter"
+          :options="[{ value: '', label: '所有分类' }, ...categories.map(cat => ({ value: cat, label: cat }))]"
+        />
+        <CustomSelect
+          v-model="filterDate"
+          class="date-filter"
+          :options="[
+            { value: '', label: '所有日期' },
+            { value: 'today', label: '今天' },
+            { value: 'tomorrow', label: '明天' },
+            { value: 'thisWeek', label: '本周' },
+            { value: 'thisMonth', label: '本月' }
+          ]"
+        />
         <input
           v-model="searchQuery"
           type="text"
@@ -85,6 +84,7 @@ import { useEventStore } from '@/stores/eventStore';
 import EventCard from '@/components/Event/EventCard.vue';
 import EventEditor from '@/components/Event/EventEditor.vue';
 import EventDetail from '@/components/Event/EventDetail.vue';
+import CustomSelect from '@/components/CustomSelect.vue';
 import { CalendarEvent } from '@/types/event';
 
 const eventStore = useEventStore();

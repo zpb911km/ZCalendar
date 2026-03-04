@@ -137,16 +137,14 @@
 
 /* 深色主题特定的表单样式 */
 input,
-textarea,
-select {
+textarea {
   background-color: var(--input-background-color);
   color: var(--text-color);
   border: 1px solid var(--border-color);
 }
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
 }

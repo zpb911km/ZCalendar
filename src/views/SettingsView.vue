@@ -9,11 +9,15 @@
         <h2>外观设置</h2>
         <div class="setting-item">
           <label>主题模式</label>
-          <select v-model="theme" @change="changeTheme" class="theme-selector">
-            <option value="light">浅色模式</option>
-            <option value="dark">深色模式</option>
-            <option value="auto">自动</option>
-          </select>
+          <CustomSelect
+            v-model="theme"
+            @change="changeTheme"
+            :options="[
+              { value: 'light', label: '浅色模式' },
+              { value: 'dark', label: '深色模式' },
+              { value: 'auto', label: '自动' },
+            ]"
+          />
         </div>
         <div class="setting-item">
           <label>主色调</label>
@@ -62,111 +66,41 @@
         </div>
       </div>
 
-      <!-- <div class="settings-section">
-        <h2>日历设置</h2>
-        <div class="setting-item">
-          <label class="checkbox-label">
-            <input 
-              v-model="showWeekNumbers" 
-              type="checkbox" 
-              @change="toggleWeekNumbers"
-            />
-            显示周数
-          </label>
-        </div>
-        <div class="setting-item">
-          <label>工作日开始时间</label>
-          <input 
-            v-model="workdayStart" 
-            type="time" 
-            @change="updateWorkdayStart"
-            class="time-input"
-          />
-        </div>
-        <div class="setting-item">
-          <label>工作日结束时间</label>
-          <input 
-            v-model="workdayEnd" 
-            type="time" 
-            @change="updateWorkdayEnd"
-            class="time-input"
-          />
-        </div>
-      </div> -->
-
-      <!-- TODO -->
-      <!-- 日历目前无意义,其他地方也没有用到,有时间再优化 -->
-      <!-- <div class="settings-section">
-        <h2>日历管理</h2>
-        <div class="calendar-list">
-          <div 
-            v-for="calendar in calendars" 
-            :key="calendar.id" 
-            class="calendar-item"
-            :style="{ borderLeft: `4px solid ${calendar.color}` }"
-          >
-            <div class="calendar-info">
-              <span class="calendar-name">{{ calendar.name }}</span>
-              <span class="calendar-id">{{ calendar.id.substring(0, 8) }}</span>
-            </div>
-            <div class="calendar-actions">
-              <button @click="editCalendar(calendar)" class="btn btn-edit">编辑</button>
-              <button @click="deleteCalendar(calendar.id)" class="btn btn-danger">删除</button>
-            </div>
-          </div>
-        </div>
-        <div class="calendar-form">
-          <input 
-            v-model="newCalendarName" 
-            type="text" 
-            placeholder="日历名称"
-            class="calendar-name-input"
-          />
-          <input 
-            v-model="newCalendarColor" 
-            type="color" 
-            class="color-picker"
-          />
-          <button @click="createCalendar" class="btn btn-primary">添加日历</button>
-        </div>
-        
-      </div> -->
-
       <div class="settings-section">
         <h2>数据管理</h2>
         <div class="setting-item">
           <label>时区设置</label>
-          <select
+          <CustomSelect
             v-model="timezoneOffset"
             @change="updateTimezone"
-            class="timezone-selector"
-          >
-            <option value="-12">UTC-12</option>
-            <option value="-11">UTC-11</option>
-            <option value="-10">UTC-10</option>
-            <option value="-9">UTC-9</option>
-            <option value="-8">UTC-8</option>
-            <option value="-7">UTC-7</option>
-            <option value="-6">UTC-6</option>
-            <option value="-5">UTC-5</option>
-            <option value="-4">UTC-4</option>
-            <option value="-3">UTC-3</option>
-            <option value="-2">UTC-2</option>
-            <option value="-1">UTC-1</option>
-            <option value="0">UTC+0</option>
-            <option value="1">UTC+1</option>
-            <option value="2">UTC+2</option>
-            <option value="3">UTC+3</option>
-            <option value="4">UTC+4</option>
-            <option value="5">UTC+5</option>
-            <option value="6">UTC+6</option>
-            <option value="7">UTC+7</option>
-            <option value="8" selected>UTC+8</option>
-            <option value="9">UTC+9</option>
-            <option value="10">UTC+10</option>
-            <option value="11">UTC+11</option>
-            <option value="12">UTC+12</option>
-          </select>
+            :options="[
+              { value: '-12', label: 'UTC-12' },
+              { value: '-11', label: 'UTC-11' },
+              { value: '-10', label: 'UTC-10' },
+              { value: '-9', label: 'UTC-9' },
+              { value: '-8', label: 'UTC-8' },
+              { value: '-7', label: 'UTC-7' },
+              { value: '-6', label: 'UTC-6' },
+              { value: '-5', label: 'UTC-5' },
+              { value: '-4', label: 'UTC-4' },
+              { value: '-3', label: 'UTC-3' },
+              { value: '-2', label: 'UTC-2' },
+              { value: '-1', label: 'UTC-1' },
+              { value: '0', label: 'UTC+0' },
+              { value: '1', label: 'UTC+1' },
+              { value: '2', label: 'UTC+2' },
+              { value: '3', label: 'UTC+3' },
+              { value: '4', label: 'UTC+4' },
+              { value: '5', label: 'UTC+5' },
+              { value: '6', label: 'UTC+6' },
+              { value: '7', label: 'UTC+7' },
+              { value: '8', label: 'UTC+8' },
+              { value: '9', label: 'UTC+9' },
+              { value: '10', label: 'UTC+10' },
+              { value: '11', label: 'UTC+11' },
+              { value: '12', label: 'UTC+12' },
+            ]"
+          />
         </div>
         <div class="setting-item">
           <button @click="exportAllEvents" class="btn btn-secondary">
@@ -188,9 +122,34 @@
       <div class="settings-section">
         <h2>关于</h2>
         <div class="about-info">
-          <p><strong>应用版本:</strong> 1.0.0</p>
-          <p><strong>构建日期:</strong> {{ buildDate }}</p>
-          <p><strong>框架:</strong> Tauri + Vue 3 + TypeScript</p>
+          <p><strong>应用版本:</strong> 0.1.0</p>
+          <p><strong>构建日期:</strong> 2026-03-04</p>
+          <a
+            href="https://github.com/zpb911km/ZCalendar"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="github-link"
+            style="
+              text-decoration: underline;
+              color: var(--text-color);
+              padding: 5px;
+              border: 1px solid var(--border-color);
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              style="vertical-align: middle; margin-right: 4px"
+            >
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            GitHub
+          </a>
         </div>
       </div>
     </main>
@@ -205,6 +164,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { themeManager } from '@/utils/themeManager';
 import router from '@/router';
 import { useLoading } from '@/composables/useLoading';
+import CustomSelect from '@/components/CustomSelect.vue';
 
 // 设置状态
 const theme = ref('auto');
@@ -214,13 +174,10 @@ const showWeekNumbers = ref(false);
 const workdayStart = ref('09:00');
 const workdayEnd = ref('18:00');
 const timezoneOffset = ref('8'); // 默认UTC+8
-const buildDate = ref(new Date().toISOString().split('T')[0]);
 const showNotifacationWarning = ref(true);
 
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
-// const newCalendarName = ref('');
-// const newCalendarColor = ref('#4285F4');
 
 onMounted(() => {
   // 加载保存的设置
@@ -283,61 +240,6 @@ const updateDefaultReminder = () => {
 const updateTimezone = () => {
   localStorage.setItem('timezoneOffset', timezoneOffset.value);
 };
-
-// const createCalendar = async () => {
-//   if (!newCalendarName.value.trim()) {
-//     alert('请输入日历名称');
-//     return;
-//   }
-
-//   try {
-//     const newCalendar = await calendarService.createCalendar({
-//       id: '',
-//       name: newCalendarName.value,
-//       color: newCalendarColor.value,
-//       is_primary: false,
-//       created_at: new Date(),
-//       updated_at: new Date()
-//     });
-//     calendars.value.push(newCalendar);
-//     newCalendarName.value = '';
-//     newCalendarColor.value = '#4285F4';
-//   } catch (error) {
-//     console.error('创建日历失败:', error);
-//     alert('创建日历失败，请重试');
-//   }
-// };
-
-// const editCalendar = (calendar: Calendar) => {
-//   // 这里可以打开一个编辑模态框，但现在简单处理
-//   const newName = prompt('请输入新的日历名称', calendar.name);
-//   if (newName) {
-//     const updatedCalendar = { ...calendar, name: newName };
-//     calendarService.updateCalendar(updatedCalendar)
-//       .then(result => {
-//         const index = calendars.value.findIndex(c => c.id === calendar.id);
-//         if (index !== -1) {
-//           calendars.value[index] = result;
-//         }
-//       })
-//       .catch(error => {
-//         console.error('更新日历失败:', error);
-//         alert('更新日历失败，请重试');
-//       });
-//   }
-// };
-
-// const deleteCalendar = async (id: string) => {
-//   if (confirm('确定要删除这个日历吗？此操作不会删除日历中的事件。')) {
-//     try {
-//       await calendarService.deleteCalendar(id);
-//       calendars.value = calendars.value.filter(cal => cal.id !== id);
-//     } catch (error) {
-//       console.error('删除日历失败:', error);
-//       alert('删除日历失败，请重试');
-//     }
-//   }
-// };
 
 const exportAllEvents = async () => {
   const { showLoading, hideLoading } = useLoading();
