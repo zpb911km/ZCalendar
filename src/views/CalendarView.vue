@@ -10,11 +10,6 @@
         @prev="prevPeriod"
         @view-change="changeView"
       />
-
-      <!-- <div class="calendar-actions">
-        <button @click="openEventEditor()" class="btn btn-primary">添加事件</button>
-        <button @click="importCalendar" class="btn btn-secondary">导入日历</button>
-      </div> -->
     </div>
 
     <!-- 日历视图内容 -->
@@ -224,10 +219,10 @@ const handleTouchEnd = () => {
   if (!isSliding.value) {
     return;
   }
-  if (touchStartX.value - touchEndX.value > 200) {
+  if (touchStartX.value - touchEndX.value > 100) {
     // 从左向右滑动，触发 nextPeriod
     nextPeriod();
-  } else if (touchEndX.value - touchStartX.value > 200) {
+  } else if (touchEndX.value - touchStartX.value > 100) {
     // 从右向左滑动，触发 prevPeriod
     prevPeriod();
   }

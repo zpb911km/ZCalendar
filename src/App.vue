@@ -4,18 +4,66 @@
     <div v-if="showSplash" class="splash-screen">
       <div class="splash-content">
         <div class="logo">
-          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="25" height="25" rx="4" fill="var(--primary-color)" opacity="0.8"/>
-            <rect x="45" y="10" width="25" height="25" rx="4" fill="var(--primary-color)" opacity="0.6"/>
-            <rect x="10" y="45" width="25" height="25" rx="4" fill="var(--primary-color)" opacity="0.6"/>
-            <rect x="45" y="45" width="25" height="25" rx="4" fill="var(--primary-color)" opacity="0.4"/>
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 80 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="10"
+              y="10"
+              width="25"
+              height="25"
+              rx="4"
+              fill="var(--primary-color)"
+              opacity="0.8"
+            />
+            <rect
+              x="45"
+              y="10"
+              width="25"
+              height="25"
+              rx="4"
+              fill="var(--primary-color)"
+              opacity="0.6"
+            />
+            <rect
+              x="10"
+              y="45"
+              width="25"
+              height="25"
+              rx="4"
+              fill="var(--primary-color)"
+              opacity="0.6"
+            />
+            <rect
+              x="45"
+              y="45"
+              width="25"
+              height="25"
+              rx="4"
+              fill="var(--primary-color)"
+              opacity="0.4"
+            />
           </svg>
         </div>
         <h1 class="app-title">ZCalendar</h1>
-        <p v-if="connectionStatus === 'connecting'" class="status-text">正在连接数据库...</p>
-        <p v-else-if="connectionStatus === 'error'" class="status-text error">无法连接到服务器</p>
+        <p v-if="connectionStatus === 'connecting'" class="status-text">
+          正在连接数据库...
+        </p>
+        <p v-else-if="connectionStatus === 'error'" class="status-text error">
+          无法连接到服务器
+        </p>
         <p v-else class="status-text">加载中...</p>
-        <button v-if="connectionStatus === 'error'" @click="retryConnection" class="retry-btn">重试</button>
+        <button
+          v-if="connectionStatus === 'error'"
+          @click="retryConnection"
+          class="retry-btn"
+        >
+          重试
+        </button>
       </div>
     </div>
 
@@ -25,6 +73,7 @@
       <nav class="main-nav">
         <router-link to="/" class="nav-link">日历</router-link>
         <router-link to="/events" class="nav-link">事件</router-link>
+        <router-link to="/ai" class="nav-link">AI 助手</router-link>
         <router-link to="/settings" class="nav-link">设置</router-link>
       </nav>
 
@@ -42,7 +91,7 @@ import LoadingBar from './components/LoadingBar.vue';
 import { setLoadingBarInstance } from './composables/useLoading';
 
 const loadingBarRef = ref<InstanceType<typeof LoadingBar> | null>(null);
-const showSplash = ref(true);
+const showSplash = ref(false);
 const connectionStatus = ref<'connecting' | 'success' | 'error'>('connecting');
 let connectionTimeout: number | null = null;
 
@@ -152,7 +201,11 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, var(--background-color) 0%, var(--input-background-color) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--background-color) 0%,
+    var(--input-background-color) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -223,7 +276,8 @@ onMounted(() => {
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

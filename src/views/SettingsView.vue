@@ -67,6 +67,50 @@
       </div>
 
       <div class="settings-section">
+        <h2>AI 配置</h2>
+        <div class="setting-item">
+          <label>API Key</label>
+          <input
+            v-model="aiConfig.apiKey"
+            type="password"
+            placeholder="输入 OpenAI 兼容的 API Key"
+            class="input-field"
+          />
+        </div>
+        <div class="setting-item">
+          <label>API Base URL</label>
+          <input
+            v-model="aiConfig.baseUrl"
+            type="text"
+            placeholder="API 基础 URL"
+            class="input-field"
+          />
+        </div>
+        <div class="setting-item">
+          <label>模型名称</label>
+          <input
+            v-model="aiConfig.model"
+            type="text"
+            placeholder="模型名称，如 qwen-vl-max"
+            class="input-field"
+          />
+        </div>
+        <div class="setting-item">
+          <button @click="saveAIConfig" class="btn btn-primary">
+            保存 AI 配置
+          </button>
+        </div>
+        <div
+          v-if="aiConfigResult"
+          class="config-result"
+          :class="aiConfigStatus"
+        >
+          {{ aiConfigResult }}
+        </div>
+        <p class="hint">支持多模态模型，可识别图片中的日程信息</p>
+      </div>
+
+      <div class="settings-section">
         <h2>数据管理</h2>
         <div class="setting-item">
           <label>数据库连接</label>
@@ -160,7 +204,7 @@
             {{ showImportText ? '隐藏' : '显示' }}文本导入
           </button>
         </div>
-        <div v-if="showImportText" class="setting-item import-text-section">
+        <div v-if="showImportText" ref="importTextSection" class="setting-item import-text-section">
           <label>文本导入</label>
           <textarea
             v-model="importTextContent"
@@ -254,8 +298,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { calendarService } from '@/services/calendarService';
+import { aiService } from '@/services/aiService';
 import { Calendar } from '@/types/calendar';
 import { invoke } from '@tauri-apps/api/core';
 import { themeManager } from '@/utils/themeManager';
@@ -271,6 +316,15 @@ const showWeekNumbers = ref(false);
 const workdayStart = ref('09:00');
 const workdayEnd = ref('18:00');
 const timezoneOffset = ref('8'); // 默认UTC+8
+
+// AI 配置状态
+const aiConfig = ref({
+  apiKey: '',
+  baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  model: 'qwen-vl-max',
+});
+const aiConfigResult = ref('');
+const aiConfigStatus = ref<'success' | 'error' | ''>('');
 const showNotifacationWarning = ref(true);
 
 // 数据库配置
@@ -282,6 +336,9 @@ const dbTestStatus = ref<'idle' | 'testing' | 'success' | 'error' | 'warning'>(
 
 // 日历管理状态
 const calendars = ref<Calendar[]>([]);
+
+// 文本导入区域引用
+const importTextSection = ref<HTMLElement | null>(null);
 
 // 文本导入状态
 const showImportText = ref(false);
@@ -299,6 +356,10 @@ onMounted(() => {
   loadCalendars();
   // 加载数据库配置
   loadDbConfig();
+  // 加载 AI 配置
+  loadAIConfig();
+  // 检查是否有待导入的内容
+  checkPendingImport();
 });
 
 const loadSettings = () => {
@@ -322,6 +383,15 @@ const loadSettings = () => {
   workdayStart.value = savedWorkdayStart;
   workdayEnd.value = savedWorkdayEnd;
   timezoneOffset.value = savedTimezoneOffset;
+};
+
+const loadAIConfig = () => {
+  const config = aiService.getConfig();
+  aiConfig.value = {
+    apiKey: config.apiKey,
+    baseUrl: config.baseUrl,
+    model: config.model,
+  };
 };
 
 const changeShowNotifacationWarning = () => {
@@ -463,6 +533,24 @@ const updateTimezone = () => {
   localStorage.setItem('timezoneOffset', timezoneOffset.value);
 };
 
+const saveAIConfig = () => {
+  try {
+    if (!aiConfig.value.apiKey.trim()) {
+      aiConfigResult.value = '请输入 API Key';
+      aiConfigStatus.value = 'error';
+      return;
+    }
+
+    aiService.saveConfig(aiConfig.value);
+    aiConfigResult.value = 'AI 配置已保存';
+    aiConfigStatus.value = 'success';
+  } catch (error) {
+    console.error('保存 AI 配置失败:', error);
+    aiConfigResult.value = '保存失败，请重试';
+    aiConfigStatus.value = 'error';
+  }
+};
+
 const exportAllEvents = async () => {
   const { showLoading, hideLoading } = useLoading();
   try {
@@ -536,7 +624,7 @@ const exportAllEvents = async () => {
 
 const importEventsFromText = async () => {
   const { showLoading, hideLoading } = useLoading();
-  const text = importTextContent.value.trim();
+  let text = importTextContent.value.trim();
 
   if (!text) {
     importResult.value = '请输入 iCalendar 格式的文本内容';
@@ -574,7 +662,7 @@ const importEventsFromText = async () => {
     }, 1500);
   } catch (error) {
     console.error('导入事件失败:', error);
-    importResult.value = '导入失败，请检查文本格式';
+    importResult.value = `导入失败, 原因为: ${error}`;
     importResultStatus.value = 'error';
   } finally {
     hideLoading();
@@ -588,6 +676,26 @@ const clearImportText = () => {
   validationResult.value = '';
   validationStatus.value = '';
   isValidationPassed.value = false;
+  // 清除待导入的内容
+  localStorage.removeItem('pendingImportText');
+};
+
+const checkPendingImport = () => {
+  const pendingText = localStorage.getItem('pendingImportText');
+  if (pendingText) {
+    importTextContent.value = pendingText;
+    showImportText.value = true;
+    // 自动执行验证
+    nextTick(() => {
+      validateIcalContent();
+      // 滚动到文本导入区域
+      if (importTextSection.value) {
+        importTextSection.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+    // 清除待导入的内容，避免下次进入时还显示
+    localStorage.removeItem('pendingImportText');
+  }
 };
 
 const onImportTextChange = () => {
@@ -626,7 +734,7 @@ const formatIcalContent = () => {
     if (!line) continue;
 
     // 检查是否是结束标签
-    const isEndTag = blockTags.some(([begin, end]) => line.startsWith(end));
+    const isEndTag = blockTags.some(([_, end]) => line.startsWith(end));
 
     if (isEndTag) {
       indentLevel = Math.max(0, indentLevel - 1);
@@ -637,7 +745,7 @@ const formatIcalContent = () => {
     result.push(indent + line);
 
     // 检查是否是开始标签
-    const isBeginTag = blockTags.some(([begin, end]) => line.startsWith(begin));
+    const isBeginTag = blockTags.some(([begin, _]) => line.startsWith(begin));
     if (isBeginTag) {
       indentLevel++;
     }
@@ -718,9 +826,6 @@ const validateIcalContent = () => {
   }
   if (!content.includes('DTEND')) {
     errors.push('事件缺少 DTEND 字段');
-  }
-  if (!content.includes('UID:')) {
-    errors.push('事件缺少 UID 字段');
   }
   if (!content.includes('SUMMARY')) {
     errors.push('事件缺少 SUMMARY 字段');
@@ -914,6 +1019,11 @@ const clearAllEvents = async () => {
   color: white;
 }
 
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .init-btn {
   background-color: var(--warning-color);
   color: var(--text-color);
@@ -956,6 +1066,39 @@ const clearAllEvents = async () => {
   font-size: 12px;
   color: var(--text-color);
   opacity: 0.6;
+}
+
+.input-field {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.config-result {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.config-result.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.config-result.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
 }
 
 .color-picker {
