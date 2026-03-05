@@ -91,7 +91,7 @@ import LoadingBar from './components/LoadingBar.vue';
 import { setLoadingBarInstance } from './composables/useLoading';
 
 const loadingBarRef = ref<InstanceType<typeof LoadingBar> | null>(null);
-const showSplash = ref(false);
+const showSplash = ref(true); // 初始显示 Splash 页面
 const connectionStatus = ref<'connecting' | 'success' | 'error'>('connecting');
 let connectionTimeout: number | null = null;
 

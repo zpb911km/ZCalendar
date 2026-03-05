@@ -33,7 +33,7 @@ defineExpose({
 <style scoped>
 .loading-bar-container {
   position: fixed;
-  top: 2rem;
+  top: var(--android-status-bar-height);
   left: 0;
   right: 0;
   z-index: 9999;
