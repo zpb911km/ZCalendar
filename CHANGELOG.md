@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.2](https://github.com/zpb911km/ZCalendar/compare/v0.1.1...v0.1.2) (2026-03-05)
+
+
+### Features
+
+* 添加AI助手功能并优化应用界面 ([45bda3a](https://github.com/zpb911km/ZCalendar/commit/45bda3ae38184ae4cd697e402063c031f28f89b3))
+* **App:** 初始化显示Splash页面并调整加载条位置 ([13f015b](https://github.com/zpb911km/ZCalendar/commit/13f015b2513461b7d9db3717509b75f2876c490e))
+* **SettingsView:** 添加iCalendar文本导入功能 ([8502ff9](https://github.com/zpb911km/ZCalendar/commit/8502ff9ef002d8d268ed539ec065ff276e77115f))
+* **style:** 添加Android状态栏高度变量适配触屏设备 ([f8bd549](https://github.com/zpb911km/ZCalendar/commit/f8bd549dedc98b1e222f8ac1f8c169705718de9a))
+* **tauri:** 迁移提醒管理功能到独立模块并添加数据持久化 ([709bb90](https://github.com/zpb911km/ZCalendar/commit/709bb905ab811a71733c10a21bcfa16745431344))
+
 ### [0.1.1](https://github.com/zpb911km/ZCalendar/compare/v0.1.0...v0.1.1) (2026-03-04)
 
 ## 0.1.0 (2026-03-04)
