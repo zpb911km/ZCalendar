@@ -1,13 +1,12 @@
-use chrono::{DateTime, Duration, FixedOffset, NaiveDateTime, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
 use ical::parser::ical::IcalParser;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, MySqlPool, Row};
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_notification::NotificationExt;
-use tokio::spawn;
-use tokio::time::{sleep, Duration as TokioDuration};
 
 mod config;
+mod reminder_manager;
 use config::ConfigManager;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -864,99 +863,7 @@ fn escape_ical_text(s: &str) -> String {
 }
 
 // 提醒服务相关函数
-async fn start_reminder_service<R: Runtime>(app_handle: AppHandle<R>, pool: MySqlPool) {
-    // 初始化Android通知渠道
-    // #[cfg(target_os = "android")]
-    // {
-    //     // 等待应用初始化完成
-    //     let app_handle_clone = app_handle.clone();
-    //     tauri::async_runtime::spawn(async move {
-    //         // 等待一段时间确保所有插件都已加载
-    //         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
-    //         // 发送一个初始化通知以确保通知渠道被正确创建
-    //         let _ = app_handle_clone
-    //             .plugin(tauri_plugin_notification::init());
-    //         let _ = app_handle_clone
-    //             .notification()
-    //             .builder()
-    //             .title("通知系统初始化")
-    //             .body("日历提醒服务已启动")
-    //             .show();
-    //     });
-    // }
-
-    spawn(async move {
-        loop {
-            check_upcoming_events(&app_handle, &pool).await;
-            // 每分钟检查一次即将到来的事件
-            sleep(TokioDuration::from_secs(60)).await;
-        }
-    });
-}
-
-async fn check_upcoming_events<R: Runtime>(app_handle: &AppHandle<R>, pool: &MySqlPool) {
-    let now = Utc::now();
-    // send_heartbeat_notification(app_handle).await;
-    // 查询未来1分钟内需要提醒的事件
-    let query =
-        "SELECT * FROM events WHERE reminder_minutes > 0 AND start > ? AND status != 'CANCELLED'";
-
-    // 添加超时保护，防止查询长时间阻塞
-    let upcoming_events: Vec<Event> = tokio::time::timeout(
-        std::time::Duration::from_secs(10), // 10 秒超时
-        sqlx::query_as::<_, Event>(query)
-            .bind(&now.to_rfc3339())
-            .fetch_all(pool),
-    )
-    .await
-    .unwrap_or(Ok(Vec::new())) // 超时或错误都返回空数组
-    .unwrap_or_default();
-    // println!("find {} upcoming events at {}", upcoming_events.len(), now.to_rfc3339());
-    for event in upcoming_events {
-        // 解析事件开始时间
-        let event_start = parse_datetime(&event.start).unwrap_or_else(|_| Utc::now());
-        // 计算事件开始时间与当前时间的差值
-        let reminder_minutes = event.reminder_minutes;
-        let time_diff = event_start - now - Duration::minutes(reminder_minutes as i64);
-        let mut minutes_diff = time_diff.num_minutes();
-        if minutes_diff < 0 {
-            minutes_diff = -minutes_diff; // abs
-        }
-
-        // 如果当前时间正好是提醒时间
-        if minutes_diff <= 1 {
-            send_reminder_notification(app_handle, &event).await;
-        }
-        // println!("minutes_diff: {}", minutes_diff);
-        // send_reminder_notification(app_handle, &event).await;
-    }
-}
-
-async fn send_reminder_notification<R: Runtime>(app_handle: &AppHandle<R>, event: &Event) {
-    let title = format!("事件提醒: {}", event.title);
-    let description = event.description.clone().unwrap_or_default();
-    // 解析 start 时间字符串为 DateTime，然后格式化
-    let start_dt = parse_datetime(&event.start).unwrap_or_else(|_| Utc::now());
-    let start_time = start_dt.format("%H:%M").to_string();
-
-    let body = if description.is_empty() {
-        format!("时间: {}", start_time)
-    } else {
-        format!("{}\n时间: {}", description, start_time)
-    };
-
-    let _ = app_handle.plugin(tauri_plugin_notification::init());
-
-    // 构建通知
-    let notification = app_handle
-        .notification()
-        .builder()
-        .title(&title)
-        .body(&body);
-
-    let _ = notification.show();
-}
+// 已迁移到 reminder_manager.rs 模块
 
 #[tauri::command]
 async fn get_db_config(app_handle: tauri::AppHandle) -> Result<Option<String>, String> {
@@ -1073,8 +980,12 @@ async fn init_database_connection<R: Runtime>(app_handle: &AppHandle<R>, db_url:
             // 注意：不再使用自动迁移，需要在 MySQL 中手动创建表
             // 请执行 src-tauri/migrations/001_create_calendars_and_events_table.sql 中的 SQL 语句
 
-            // 启动提醒服务
-            tauri::async_runtime::spawn(start_reminder_service(app_handle.clone(), pool.clone()));
+            // 启动新的提醒服务
+            let app_handle_for_reminders = app_handle.clone();
+            let pool_for_reminders = pool.clone();
+            tauri::async_runtime::spawn(async move {
+                reminder_manager::start_reminder_loop(&app_handle_for_reminders, pool_for_reminders).await;
+            });
 
             // 将数据库连接池存储在应用状态中
             app_handle.manage(pool);
@@ -1149,6 +1060,8 @@ pub fn run() {
             save_db_config,
             test_db_connection,
             initialize_database,
+            // 提醒相关命令
+            set_reminder_update_flag,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -1229,4 +1142,11 @@ async fn initialize_database(db_url: String) -> Result<String, String> {
 
     pool.close().await;
     Ok("数据库初始化成功".to_string())
+}
+
+// 设置提醒更新标志
+#[tauri::command]
+fn set_reminder_update_flag(app_handle: tauri::AppHandle) -> Result<(), String> {
+    let manager = reminder_manager::ReminderManager::new(&app_handle)?;
+    manager.set_update_flag()
 }

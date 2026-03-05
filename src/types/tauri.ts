@@ -17,4 +17,5 @@ export interface TauriCommands {
   updateCalendar(calendar: { calendar: any }): Promise<any>;
   deleteCalendar(id: { id: string }): Promise<void>;
   getCalendarEvents(calendarId: { calendarId: string }): Promise<any[]>;
+  setReminderUpdateFlag(): Promise<void>;
 }

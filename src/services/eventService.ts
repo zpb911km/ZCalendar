@@ -110,6 +110,8 @@ export class EventServiceImpl implements EventService {
     return withLoading(async () => {
       const backendEvent = convertEventToBackend(event);
       const result = await invoke<any>('create_event', { event: backendEvent });
+      // 设置提醒更新标志
+      await invoke('set_reminder_update_flag');
       return convertEventFromBackend(result);
     });
   }
@@ -118,6 +120,10 @@ export class EventServiceImpl implements EventService {
     return withLoading(async () => {
       const backendEvent = convertEventToBackend(event);
       const result = await invoke<any>('update_event', { event: backendEvent });
+      // 如果修改了提醒时间或开始时间，设置提醒更新标志
+      if (event.reminder_minutes !== undefined || event.start !== undefined) {
+        await invoke('set_reminder_update_flag');
+      }
       return convertEventFromBackend(result);
     });
   }
@@ -125,6 +131,8 @@ export class EventServiceImpl implements EventService {
   async deleteEvent(id: number): Promise<void> {
     return withLoading(async () => {
       await invoke('delete_event', { id: convertIdToBackend(id) });
+      // 设置提醒更新标志
+      await invoke('set_reminder_update_flag');
     });
   }
 
@@ -141,6 +149,8 @@ export class EventServiceImpl implements EventService {
   async importIcal(icalContent: string): Promise<CalendarEvent[]> {
     return withLoading(async () => {
       const result = await invoke<any[]>('import_ical', { icalContent });
+      // 设置提醒更新标志
+      await invoke('set_reminder_update_flag');
       return result.map(convertEventFromBackend);
     });
   }
