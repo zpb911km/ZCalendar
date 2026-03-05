@@ -291,7 +291,7 @@ onMounted(() => {
   background-color: var(--input-background-color);
   border-bottom: 1px solid var(--border-color);
   padding: 0 20px;
-  padding-top: 2rem;
+  padding-top: var(--android-status-bar-height);
 }
 
 .nav-link {
@@ -312,6 +312,6 @@ onMounted(() => {
 .main-content {
   /* flex: 1; */
   overflow: hidden;
-  height: calc(100vh - 56px - 2rem);
+  height: calc(100vh - 56px - var(--android-status-bar-height));
 }
 </style>

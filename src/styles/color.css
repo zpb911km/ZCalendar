@@ -199,6 +199,18 @@
   color: var(--text-secondary-color) !important;
 }
 
+/* android 状态栏预留空间 */
+:root {
+  --android-status-bar-height: 0px;
+}
+
+@media (pointer: coarse) {
+  /* 触屏设备 */
+  :root {
+    --android-status-bar-height: 2rem;
+  }
+}
+
 /* 响应式设计 */
 @media (min-width: 576px) {
   .container {

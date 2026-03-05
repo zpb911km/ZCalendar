@@ -204,7 +204,11 @@
             {{ showImportText ? '隐藏' : '显示' }}文本导入
           </button>
         </div>
-        <div v-if="showImportText" ref="importTextSection" class="setting-item import-text-section">
+        <div
+          v-if="showImportText"
+          ref="importTextSection"
+          class="setting-item import-text-section"
+        >
           <label>文本导入</label>
           <textarea
             v-model="importTextContent"
@@ -690,7 +694,10 @@ const checkPendingImport = () => {
       validateIcalContent();
       // 滚动到文本导入区域
       if (importTextSection.value) {
-        importTextSection.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        importTextSection.value.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
       }
     });
     // 清除待导入的内容，避免下次进入时还显示
@@ -922,7 +929,7 @@ const clearAllEvents = async () => {
 .settings-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 2rem - 40px);
+  height: calc(100vh - 56px - 40px - var(--android-status-bar-height));
   padding: 20px;
   background-color: var(--background-color);
   color: var(--text-color);

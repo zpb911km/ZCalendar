@@ -240,7 +240,7 @@ onMounted(async () => {
 .calendar-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 2rem);
+  height: calc(100vh - 56px - var(--android-status-bar-height));
   width: 100%;
   background-color: var(--background-color);
   color: var(--text-color);
@@ -281,6 +281,6 @@ onMounted(async () => {
 
 .calendar-content {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
 }
 </style>

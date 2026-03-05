@@ -108,15 +108,13 @@
         </div>
       </div>
     </div>
-
-    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAIStore } from '@/stores/aiStore';
-import { invoke } from '@tauri-apps/api/core';
 
 const router = useRouter();
 const aiStore = useAIStore();
@@ -312,6 +310,7 @@ onMounted(() => {
   flex-direction: column;
   flex: 1;
   overflow: hidden;
+  font-size: 12px;
 }
 
 .messages {
@@ -527,7 +526,8 @@ onMounted(() => {
 
 textarea {
   flex: 1;
-  min-height: 40px;
+  height: 40px;
+  /* min-height: 40px; */
   max-height: 120px;
   padding: 10px 12px;
   border: 1px solid var(--border-color);

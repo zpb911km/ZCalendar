@@ -16,7 +16,10 @@
         <CustomSelect
           v-model="filterCategory"
           class="category-filter"
-          :options="[{ value: '', label: '所有分类' }, ...categories.map(cat => ({ value: cat, label: cat }))]"
+          :options="[
+            { value: '', label: '所有分类' },
+            ...categories.map(cat => ({ value: cat, label: cat })),
+          ]"
         />
         <CustomSelect
           v-model="filterDate"
@@ -26,7 +29,7 @@
             { value: 'today', label: '今天' },
             { value: 'tomorrow', label: '明天' },
             { value: 'thisWeek', label: '本周' },
-            { value: 'thisMonth', label: '本月' }
+            { value: 'thisMonth', label: '本月' },
           ]"
         />
         <input

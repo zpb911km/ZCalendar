@@ -6,10 +6,10 @@ import { aiService } from '@/services/aiService';
 export const useAIStore = defineStore('ai', () => {
   // 对话历史
   const messages = ref<ChatMessage[]>([]);
-  
+
   // 加载状态
   const isLoading = ref(false);
-  
+
   // 错误信息
   const error = ref<string | null>(null);
 
@@ -87,7 +87,9 @@ export const useAIStore = defineStore('ai', () => {
     }
 
     // 获取除最后一条助手消息外的所有消息
-    const messagesToSend = messages.value.filter(msg => msg.role !== 'assistant');
+    const messagesToSend = messages.value.filter(
+      msg => msg.role !== 'assistant'
+    );
 
     if (messagesToSend.length === 0) {
       return;
